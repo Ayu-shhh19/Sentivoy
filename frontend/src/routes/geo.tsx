@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/geo")({
   head: () => ({
     meta: [
-      { title: "Geo Intelligence — Log Anomaly Sentinel" },
+      { title: "Geo Intelligence — Sentivoy" },
       { name: "description", content: "Geographic threat intelligence and IP reputation feeds." },
     ],
   }),

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/ueba")({
   head: () => ({
     meta: [
-      { title: "User Behavior (UEBA) — Log Anomaly Sentinel" },
+      { title: "User Behavior (UEBA) — Sentivoy" },
       { name: "description", content: "User & Entity Behavior Analytics powered by ML baselines." },
     ],
   }),

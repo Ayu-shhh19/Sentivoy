@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/live-logs")({
   head: () => ({
     meta: [
-      { title: "Live Logs — Log Anomaly Sentinel" },
+      { title: "Live Logs — Sentivoy" },
       { name: "description", content: "Stream raw log events in real time with intelligent filters." },
     ],
   }),

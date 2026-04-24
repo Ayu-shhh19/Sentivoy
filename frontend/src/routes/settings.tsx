@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "Settings — Log Anomaly Sentinel" },
+      { title: "Settings — Sentivoy" },
       { name: "description", content: "Configure detection rules, members, and billing." },
     ],
   }),
@@ -58,7 +58,7 @@ function SettingsPage() {
   const settingItems: Record<string, { label: string; sub: string; key: keyof typeof toggles }[]> = {
     general: [
       { label: "Real-time monitoring", sub: "Stream events from all connected sources.", key: "realtime" },
-      { label: "Sentinel AI triage", sub: "Let AI auto-classify low-confidence alerts.", key: "aiTriage" },
+      { label: "Sentivoy AI triage", sub: "Let AI auto-classify low-confidence alerts.", key: "aiTriage" },
       { label: "Weekly executive report", sub: "Email summary every Monday at 8am.", key: "weeklyReport" },
     ],
     detection: [
@@ -129,7 +129,7 @@ function SettingsPage() {
           ) : active === "data" ? (
             <div className="bg-card border border-border rounded-2xl p-5 shadow-[var(--shadow-soft)]">
               <div className="text-[15px] font-semibold text-foreground">Data Retention</div>
-              <div className="text-xs text-muted-foreground mt-0.5">How long Sentinel keeps your logs</div>
+              <div className="text-xs text-muted-foreground mt-0.5">How long Sentivoy keeps your logs</div>
               <div className="mt-5 space-y-4">
                 {[
                   { label: "Raw logs", value: "30 days" },

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/incident-response")({
   head: () => ({
     meta: [
-      { title: "Incident Response — Log Anomaly Sentinel" },
+      { title: "Incident Response — Sentivoy" },
       { name: "description", content: "Coordinate incident response with playbooks and timelines." },
     ],
   }),

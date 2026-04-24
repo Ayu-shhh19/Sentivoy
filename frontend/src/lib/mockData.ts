@@ -1,4 +1,4 @@
-// Mock data generators for the Sentinel dashboard
+// Mock data generators for the Sentivoy dashboard
 
 export type Severity = "Critical" | "High" | "Medium" | "Low";
 export type AlertStatus = "Open" | "Investigating" | "Resolved";

@@ -16,9 +16,9 @@ import { generateAlerts, type AlertRow } from "@/lib/mockData";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Log Anomaly Sentinel" },
+      { title: "Dashboard — Sentivoy" },
       { name: "description", content: "AI-powered cybersecurity command center for log anomaly detection, threat analytics, and incident response." },
-      { property: "og:title", content: "Log Anomaly Sentinel — AI Security Command Center" },
+      { property: "og:title", content: "Sentivoy — AI Security Command Center" },
       { property: "og:description", content: "Monitor anomalies, threats, and AI-driven security insights in real time." },
     ],
   }),
@@ -142,7 +142,7 @@ function DashboardPage() {
           </div>
 
           <footer className="pt-2 pb-4 text-[11px] text-muted-foreground/70 text-center">
-            Sentinel v2.4 · models updated 4 min ago
+            Sentivoy v2.4 · models updated 4 min ago
           </footer>
         </main>
       </div>

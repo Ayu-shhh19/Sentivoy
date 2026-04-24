@@ -1,5 +1,5 @@
+import { useState, useEffect } from "react";
 import {
-  Shield,
   LayoutDashboard,
   Activity,
   ScrollText,
@@ -10,96 +10,366 @@ import {
   Plug,
   Settings,
   HelpCircle,
-  Sparkles,
+  ChevronDown,
+  BarChart3,
+  PanelLeftClose,
+  PanelLeft,
 } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
+import { useSidebar } from "@/lib/sidebarContext";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+
+// ─── Data ────────────────────────────────────────────────────────────────────
 
 type NavItem = {
   to: string;
   label: string;
   icon: typeof LayoutDashboard;
   exact?: boolean;
+  badge?: string;
 };
 
-const nav: NavItem[] = [
+type NavGroup = {
+  label: string;
+  icon: typeof LayoutDashboard;
+  children: NavItem[];
+};
+
+const primaryNav: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { to: "/threat-analytics", label: "Threat Analytics", icon: Activity },
+  { to: "/alerts", label: "Alerts", icon: AlertTriangle, badge: "46" },
   { to: "/live-logs", label: "Live Logs", icon: ScrollText },
-  { to: "/alerts", label: "Alerts", icon: AlertTriangle },
-  { to: "/ueba", label: "User Behavior", icon: UserCog },
   { to: "/geo", label: "Geo Intelligence", icon: Globe2 },
   { to: "/incident-response", label: "Incident Response", icon: Siren },
   { to: "/integrations", label: "Integrations", icon: Plug },
+];
+
+const analyticsGroup: NavGroup = {
+  label: "Analytics",
+  icon: BarChart3,
+  children: [
+    { to: "/threat-analytics", label: "Threat Analytics", icon: Activity },
+    { to: "/ueba", label: "User Behavior", icon: UserCog },
+  ],
+};
+
+const bottomNav: NavItem[] = [
   { to: "/settings", label: "Settings", icon: Settings },
 ];
 
-export function AppSidebar() {
-  const { pathname } = useLocation();
+// ─── Expanded nav link (with label) ──────────────────────────────────────────
+
+function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
+  const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
+  const Icon = item.icon;
 
   return (
-    <aside className="hidden lg:flex flex-col w-[248px] shrink-0 border-r border-border bg-sidebar h-screen sticky top-0">
-      <div className="px-5 pt-6 pb-5 flex items-center gap-2.5">
-        <div className="h-9 w-9 rounded-xl bg-primary text-primary-foreground grid place-items-center shadow-sm">
-          <Shield className="h-4.5 w-4.5" strokeWidth={2.4} />
-        </div>
-        <div className="leading-tight">
-          <div className="text-[13px] font-semibold tracking-tight text-sidebar-foreground">
-            Log Anomaly
-          </div>
-          <div className="text-[13px] font-semibold tracking-tight text-sidebar-foreground -mt-0.5">
-            Sentinel
-          </div>
-        </div>
+    <Link
+      to={item.to as "/"}
+      className={cn(
+        "group flex items-center gap-3 px-3 py-[9px] rounded-xl text-[13.5px] font-medium transition-all duration-150",
+        active
+          ? "bg-primary text-primary-foreground shadow-sm"
+          : "text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-muted/70",
+      )}
+    >
+      <Icon
+        className={cn(
+          "h-[18px] w-[18px] shrink-0",
+          active
+            ? "text-primary-foreground"
+            : "text-muted-foreground group-hover:text-sidebar-foreground",
+        )}
+        strokeWidth={active ? 2.2 : 1.8}
+      />
+      <span className="truncate">{item.label}</span>
+      {item.badge && (
+        <span
+          className={cn(
+            "ml-auto text-[10.5px] font-bold tabular-nums min-w-[22px] text-center px-1.5 py-[1px] rounded-md",
+            active
+              ? "bg-white/20 text-primary-foreground"
+              : "bg-primary/10 text-primary",
+          )}
+        >
+          {item.badge}
+        </span>
+      )}
+    </Link>
+  );
+}
+
+// ─── Collapsed nav link (icon-only with tooltip) ─────────────────────────────
+
+function CollapsedNavLink({ item, pathname }: { item: NavItem; pathname: string }) {
+  const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
+  const Icon = item.icon;
+
+  return (
+    <Tooltip delayDuration={0}>
+      <TooltipTrigger asChild>
+        <Link
+          to={item.to as "/"}
+          className={cn(
+            "group relative flex items-center justify-center h-10 w-10 rounded-xl transition-all duration-150",
+            active
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "text-muted-foreground hover:text-sidebar-foreground hover:bg-muted/70",
+          )}
+        >
+          <Icon className="h-[18px] w-[18px]" strokeWidth={active ? 2.2 : 1.8} />
+          {item.badge && (
+            <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-critical text-white text-[9px] font-bold">
+              {item.badge}
+            </span>
+          )}
+        </Link>
+      </TooltipTrigger>
+      <TooltipContent side="right" sideOffset={8}>
+        {item.label}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+// ─── Expanded sidebar content ────────────────────────────────────────────────
+
+function SidebarExpanded({ pathname, onClose }: { pathname: string; onClose?: () => void }) {
+  const [analyticsOpen, setAnalyticsOpen] = useState(() => {
+    return analyticsGroup.children.some((c) => pathname.startsWith(c.to));
+  });
+  const isAnalyticsActive = analyticsGroup.children.some((c) => pathname.startsWith(c.to));
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Brand */}
+      <div className="px-5 pt-5 pb-4 flex items-center gap-3">
+        <img
+          src="/favicon.png"
+          alt="Sentivoy"
+          className="h-[34px] w-[34px] rounded-[10px] object-cover"
+        />
+        <span className="text-[16px] font-bold tracking-tight text-sidebar-foreground">
+          Sentivoy
+        </span>
       </div>
 
-      <nav className="px-3 flex-1 space-y-0.5 overflow-y-auto scrollbar-thin">
-        <div className="px-3 pt-2 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Overview
-        </div>
-        {nav.map((item) => {
-          const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.to}
-              to={item.to as "/"}
+      {/* Nav */}
+      <nav className="flex-1 px-3 overflow-y-auto scrollbar-thin space-y-0.5">
+        {primaryNav.map((item) => (
+          <div key={item.to} onClick={onClose}>
+            <NavLink item={item} pathname={pathname} />
+          </div>
+        ))}
+
+        {/* Collapsible Analytics */}
+        <div className="pt-0.5">
+          <button
+            onClick={() => setAnalyticsOpen((o) => !o)}
+            className={cn(
+              "w-full flex items-center gap-3 px-3 py-[9px] rounded-xl text-[13.5px] font-medium transition-all duration-150",
+              isAnalyticsActive && !analyticsOpen
+                ? "text-primary"
+                : "text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-muted/70",
+            )}
+          >
+            <BarChart3
               className={cn(
-                "group flex items-center gap-3 px-3 py-2 rounded-lg text-[13.5px] font-medium transition-colors",
-                active
-                  ? "bg-primary-soft text-primary"
-                  : "text-sidebar-foreground/75 hover:text-sidebar-foreground hover:bg-muted",
+                "h-[18px] w-[18px] shrink-0",
+                isAnalyticsActive ? "text-primary" : "text-muted-foreground",
               )}
-            >
-              <Icon className={cn("h-4 w-4", active ? "text-primary" : "text-muted-foreground group-hover:text-sidebar-foreground")} />
-              <span>{item.label}</span>
-              {item.label === "Alerts" && (
-                <span className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-critical/10 text-critical">
-                  7
-                </span>
+              strokeWidth={1.8}
+            />
+            <span className="truncate">{analyticsGroup.label}</span>
+            <ChevronDown
+              className={cn(
+                "ml-auto h-4 w-4 text-muted-foreground transition-transform duration-200",
+                analyticsOpen && "rotate-180",
               )}
-            </Link>
-          );
-        })}
+            />
+          </button>
+
+          <div
+            className={cn(
+              "overflow-hidden transition-all duration-200",
+              analyticsOpen ? "max-h-[200px] opacity-100" : "max-h-0 opacity-0",
+            )}
+          >
+            <div className="ml-[18px] pl-4 border-l border-border/70 space-y-0.5 py-0.5">
+              {analyticsGroup.children.map((child) => {
+                const active = child.exact ? pathname === child.to : pathname.startsWith(child.to);
+                return (
+                  <div key={child.to} onClick={onClose}>
+                    <Link
+                      to={child.to as "/"}
+                      className={cn(
+                        "block px-3 py-[7px] rounded-lg text-[13px] font-medium transition-all duration-150 truncate",
+                        active
+                          ? "text-primary bg-primary/[0.06]"
+                          : "text-muted-foreground hover:text-sidebar-foreground hover:bg-muted/60",
+                      )}
+                    >
+                      {child.label}
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="!my-2.5 mx-1 h-px bg-border/80" />
+
+        {/* Settings / Help */}
+        {bottomNav.map((item) => (
+          <div key={item.to} onClick={onClose}>
+            <NavLink item={item} pathname={pathname} />
+          </div>
+        ))}
+
+        <button className="w-full flex items-center gap-3 px-3 py-[9px] rounded-xl text-[13.5px] font-medium text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-muted/70 transition-all duration-150">
+          <HelpCircle className="h-[18px] w-[18px] text-muted-foreground shrink-0" strokeWidth={1.8} />
+          <span>Help &amp; Support</span>
+        </button>
       </nav>
 
-      <div className="p-3 space-y-2">
-        <div className="rounded-2xl p-4 bg-gradient-to-br from-primary to-[oklch(0.46_0.20_270)] text-primary-foreground relative overflow-hidden">
-          <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-white/10 blur-xl" />
-          <Sparkles className="h-4 w-4 mb-2" />
-          <div className="text-[13px] font-semibold leading-tight">Upgrade to Enterprise</div>
-          <div className="text-[11px] opacity-80 mt-1 leading-snug">
-            Unlimited log ingestion + AI playbooks.
+      {/* Upgrade card */}
+      <div className="p-3 pt-1">
+        <div className="rounded-2xl p-4 bg-gradient-to-br from-[oklch(0.55_0.19_260)] to-[oklch(0.45_0.20_275)] text-white relative overflow-hidden">
+          <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-white/[0.08] blur-md" />
+          <div className="absolute -left-2 -bottom-3 h-12 w-12 rounded-full bg-white/[0.06] blur-lg" />
+          <div className="relative">
+            <div className="text-[13px] font-semibold leading-tight">Upgrade to Premium!</div>
+            <div className="text-[11px] text-white/70 mt-1.5 leading-snug">
+              Upgrade your account and unlock all of the benefits.
+            </div>
+            <button className="mt-3 w-full h-8 rounded-lg bg-white text-primary text-[12px] font-semibold hover:bg-white/90 transition shadow-sm">
+              Upgrade premium
+            </button>
           </div>
-          <button className="mt-3 text-[11px] font-semibold bg-white text-primary px-2.5 py-1.5 rounded-md hover:bg-white/90 transition">
-            See plans
-          </button>
         </div>
-        <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12.5px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition">
-          <HelpCircle className="h-4 w-4" />
-          Help & Support
-        </button>
       </div>
-    </aside>
+    </div>
+  );
+}
+
+// ─── Collapsed sidebar content (icon-only) ───────────────────────────────────
+
+function SidebarCollapsed({ pathname }: { pathname: string }) {
+  const isAnalyticsActive = analyticsGroup.children.some((c) => pathname.startsWith(c.to));
+
+  return (
+    <TooltipProvider>
+      <div className="flex flex-col items-center h-full py-5">
+        {/* Logo only */}
+        <img
+          src="/favicon.png"
+          alt="Sentivoy"
+          className="h-[32px] w-[32px] rounded-[10px] object-cover mb-4"
+        />
+
+        {/* Nav icons */}
+        <nav className="flex-1 flex flex-col items-center gap-1 overflow-y-auto scrollbar-thin">
+          {primaryNav.map((item) => (
+            <CollapsedNavLink key={item.to} item={item} pathname={pathname} />
+          ))}
+
+          {/* Analytics group items */}
+          <div className="!my-1 w-6 h-px bg-border/80" />
+          {analyticsGroup.children.map((child) => (
+            <CollapsedNavLink key={child.to} item={child} pathname={pathname} />
+          ))}
+
+          <div className="!my-1 w-6 h-px bg-border/80" />
+
+          {bottomNav.map((item) => (
+            <CollapsedNavLink key={item.to} item={item} pathname={pathname} />
+          ))}
+
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <button className="flex items-center justify-center h-10 w-10 rounded-xl text-muted-foreground hover:text-sidebar-foreground hover:bg-muted/70 transition-all duration-150">
+                <HelpCircle className="h-[18px] w-[18px]" strokeWidth={1.8} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={8}>
+              Help &amp; Support
+            </TooltipContent>
+          </Tooltip>
+        </nav>
+
+        {/* Collapsed upgrade indicator */}
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>
+            <div className="mt-2 h-10 w-10 rounded-xl bg-gradient-to-br from-[oklch(0.55_0.19_260)] to-[oklch(0.45_0.20_275)] grid place-items-center cursor-pointer hover:opacity-90 transition">
+              <span className="text-white text-[11px] font-bold">PRO</span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="right" sideOffset={8}>
+            Upgrade to Premium
+          </TooltipContent>
+        </Tooltip>
+      </div>
+    </TooltipProvider>
+  );
+}
+
+// ─── Main AppSidebar ─────────────────────────────────────────────────────────
+
+export function AppSidebar() {
+  const { pathname } = useLocation();
+  const { collapsed, toggleCollapsed, mobileOpen, setMobileOpen } = useSidebar();
+
+  // Close mobile drawer on navigation
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname, setMobileOpen]);
+
+  return (
+    <>
+      {/* Desktop / Tablet sidebar */}
+      <aside
+        className={cn(
+          "hidden md:flex flex-col shrink-0 border-r border-border bg-sidebar h-screen sticky top-0 transition-all duration-300 ease-in-out",
+          collapsed ? "w-[68px]" : "w-[252px]",
+        )}
+      >
+        {/* Toggle button */}
+        <button
+          onClick={toggleCollapsed}
+          className={cn(
+            "absolute -right-3 top-7 z-40 h-6 w-6 rounded-full border border-border bg-card shadow-sm grid place-items-center text-muted-foreground hover:text-foreground hover:bg-muted transition",
+          )}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? (
+            <PanelLeft className="h-3.5 w-3.5" />
+          ) : (
+            <PanelLeftClose className="h-3.5 w-3.5" />
+          )}
+        </button>
+
+        {collapsed ? (
+          <SidebarCollapsed pathname={pathname} />
+        ) : (
+          <SidebarExpanded pathname={pathname} />
+        )}
+      </aside>
+
+      {/* Mobile drawer overlay */}
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetContent side="left" className="w-[272px] p-0 bg-sidebar border-r border-border">
+          <SidebarExpanded pathname={pathname} onClose={() => setMobileOpen(false)} />
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }

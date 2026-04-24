@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/threat-analytics")({
   head: () => ({
     meta: [
-      { title: "Threat Analytics — Log Anomaly Sentinel" },
+      { title: "Threat Analytics — Sentivoy" },
       { name: "description", content: "Deep-dive analytics on detected threats and anomaly patterns." },
     ],
   }),

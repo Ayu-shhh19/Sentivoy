@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/integrations")({
   head: () => ({
     meta: [
-      { title: "Integrations — Log Anomaly Sentinel" },
+      { title: "Integrations — Sentivoy" },
       { name: "description", content: "Connect SIEM, cloud, and identity sources." },
     ],
   }),

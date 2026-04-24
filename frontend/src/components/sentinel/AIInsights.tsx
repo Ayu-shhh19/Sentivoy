@@ -11,7 +11,7 @@ export function AIInsights() {
         </div>
         <div>
           <div className="text-[14px] font-semibold text-foreground flex items-center gap-1.5">
-            Sentinel AI
+            Sentivoy AI
             <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md bg-primary-soft text-primary">BETA</span>
           </div>
           <div className="text-[10.5px] text-muted-foreground">Insight stream • live</div>
@@ -57,7 +57,7 @@ export function AIInsights() {
 
       <div className="mt-4 relative">
         <input
-          placeholder="Ask Sentinel AI…"
+          placeholder="Ask Sentivoy AI…"
           className="w-full h-10 pl-3 pr-10 rounded-xl bg-muted/60 border border-transparent focus:border-primary/40 focus:bg-card text-[13px] outline-none transition"
         />
         <button className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 w-7 rounded-lg bg-primary text-primary-foreground grid place-items-center hover:bg-primary/90 transition">

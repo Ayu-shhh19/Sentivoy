@@ -51,7 +51,10 @@ async def process_log_pipeline(log: LogEntry, log_id: str):
         if is_anomaly or action != "ignore":
             try:
                 # Store the anomaly record
-                supabase.table("anomalies").insert(result.model_dump()).execute()
+                # Exclude columns that are not completely migrated directly in the DB schema
+                db_payload = result.model_dump(mode='json', exclude={'anomaly_score', 'severity', 'reasoning'})
+                db_payload['reconstruction_error'] = result.anomaly_score
+                supabase.table("anomalies").insert(db_payload).execute()
             except Exception as e:
                 print(f"Error storing anomaly result: {e}")
 

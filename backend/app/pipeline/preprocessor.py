@@ -112,8 +112,8 @@ def extract_features(log: LogEntry, log_id: str) -> FeatureVector:
     time_gap = min(gap_seconds / 3600.0, 1.0)
     
     # 4. Geo distance & 6. IP change
-    prev_ip = prev_event.get("ip")
-    if prev_ip != log.ip_address:
+    prev_ip = prev_event.get("ip_address", "")
+    if prev_ip and prev_ip != log.ip_address:
         ip_change = 1.0
         
         lat1, lng1 = mock_geo_lookup(prev_ip)

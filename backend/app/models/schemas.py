@@ -131,8 +131,8 @@ class ThreatPattern(BaseModel):
 class GeoOrigin(BaseModel):
     country: str
     code: str
-    x: int
-    y: int
+    x: float
+    y: float
     threats: int
     intensity: str
 

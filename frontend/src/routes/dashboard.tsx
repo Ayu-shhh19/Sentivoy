@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Database, AlertTriangle, ShieldAlert, Flame, Ban, Plus, Download } from "lucide-react";
+import { Database, AlertTriangle, ShieldAlert, Flame, Ban, Plus, Download, Mail } from "lucide-react";
 import { AppSidebar } from "@/components/sentinel/AppSidebar";
 import { TopHeader } from "@/components/sentinel/TopHeader";
 import { MetricCard } from "@/components/sentinel/MetricCard";
@@ -128,6 +128,26 @@ function DashboardPage() {
                   <Download className="h-3.5 w-3.5" />
                 )}
                 {exporting ? "Generating..." : "Export report"}
+              </button>
+              <button
+                onClick={async () => {
+                  if (!session?.access_token) return;
+                  try {
+                    const res = await fetch(`${API_URL}/api/reports/email`, {
+                      method: "POST",
+                      headers: { Authorization: `Bearer ${session.access_token}` },
+                    });
+                    if (!res.ok) throw new Error("Failed to email report");
+                    alert("Report successfully emailed to your address.");
+                  } catch (err) {
+                    console.error("Email failed:", err);
+                    alert("Failed to email report. Please try again.");
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-primary text-primary-foreground text-[13px] font-semibold hover:opacity-90 transition"
+              >
+                <Mail className="h-3.5 w-3.5" />
+                Email report
               </button>
             </div>
           </div>

@@ -352,7 +352,7 @@ def generate_status_report_pdf(
     ]
 
     anomaly_rows = [anomaly_header]
-    sorted_anomalies = sorted(anomalies_data, key=lambda a: a.get("anomaly_score", 0), reverse=True)[:15]
+    sorted_anomalies = sorted(anomalies_data, key=lambda a: a.get("reconstruction_error", 0), reverse=True)[:15]
 
     for a in sorted_anomalies:
         log = logs_data.get(a.get("log_id", ""), {})
@@ -362,7 +362,7 @@ def generate_status_report_pdf(
         anomaly_rows.append([
             Paragraph(log.get("event_type", "N/A").replace("_", " ").title(), styles["BodyText2"]),
             Paragraph(f"<font color='{sev_color}'><b>{sev.capitalize()}</b></font>", styles["BodyText2"]),
-            Paragraph(f"{a.get('anomaly_score', 0):.4f}", styles["BodyText2"]),
+            Paragraph(f"{a.get('reconstruction_error', 0):.4f}", styles["BodyText2"]),
             Paragraph(a.get("action_recommendation", "N/A").replace("_", " ").title(), styles["BodyText2"]),
             Paragraph(log.get("ip_address", "N/A"), styles["BodyText2"]),
         ])

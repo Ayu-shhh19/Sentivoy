@@ -18,8 +18,7 @@ import {
   Cell,
 } from "recharts";
 import { PageShell } from "@/components/sentinel/PageShell";
-import { generateTrend } from "@/lib/mockData";
-import { useMemo } from "react";
+import { useDashboardData } from "@/hooks/useDashboardData";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/threat-analytics")({
@@ -41,15 +40,6 @@ const radarData = [
   { kind: "Persistence", score: 38 },
 ];
 
-const techniques = [
-  { id: "T1110", name: "Brute Force", count: 412, trend: 12 },
-  { id: "T1078", name: "Valid Accounts", count: 287, trend: -4 },
-  { id: "T1190", name: "Exploit Public App", count: 196, trend: 22 },
-  { id: "T1566", name: "Phishing", count: 134, trend: 8 },
-  { id: "T1059", name: "Command Interpreter", count: 98, trend: -2 },
-  { id: "T1041", name: "Exfil over C2", count: 76, trend: 31 },
-];
-
 const killChain = [
   { stage: "Recon", value: 1284 },
   { stage: "Weaponize", value: 642 },
@@ -61,7 +51,24 @@ const killChain = [
 ];
 
 function ThreatAnalyticsPage() {
-  const trend = useMemo(() => generateTrend(60), []);
+  const { data: dashboardData, isLoading } = useDashboardData();
+
+  if (isLoading || !dashboardData) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  const { trend, threatPatterns } = dashboardData;
+
+  const techniques = threatPatterns.map((tp, i) => ({
+    id: `T100${i}`,
+    name: tp.name,
+    count: tp.value,
+    trend: Math.round((Math.random() - 0.4) * 20), // mock a trend percentage for now
+  }));
 
   return (
     <PageShell

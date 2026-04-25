@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Database, AlertTriangle, ShieldAlert, Flame, Ban, Plus, Download } from "lucide-react";
 import { AppSidebar } from "@/components/sentinel/AppSidebar";
@@ -11,7 +11,9 @@ import { AIInsights } from "@/components/sentinel/AIInsights";
 import { RepeatAttackRate } from "@/components/sentinel/RepeatAttackRate";
 import { AlertsTable } from "@/components/sentinel/AlertsTable";
 import { AlertDrawer } from "@/components/sentinel/AlertDrawer";
-import { generateAlerts, type AlertRow } from "@/lib/mockData";
+import { useAuth } from "@/lib/authContext";
+import type { AlertRow } from "@/lib/mockData";
+import { useDashboardData } from "@/hooks/useDashboardData";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -26,33 +28,51 @@ export const Route = createFileRoute("/")({
 });
 
 function DashboardPage() {
-  const [alerts, setAlerts] = useState<AlertRow[]>([]);
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [selected, setSelected] = useState<AlertRow | null>(null);
-  const [metrics, setMetrics] = useState({
-    logs: 1284592,
-    anomalies: 3241,
-    critical: 47,
-    threats: 128,
-    blocked: 892,
-  });
+  
+  const { data: dashboardData, isLoading, error } = useDashboardData();
 
+  // Redirect to login if not authenticated
   useEffect(() => {
-    setAlerts(generateAlerts(10));
-  }, []);
+    if (!authLoading && !user) {
+      navigate({ to: "/auth" });
+    }
+  }, [authLoading, user, navigate]);
 
-  // Simulate live updates
-  useEffect(() => {
-    const id = setInterval(() => {
-      setMetrics((m) => ({
-        logs: m.logs + Math.floor(Math.random() * 240),
-        anomalies: m.anomalies + Math.floor(Math.random() * 4),
-        critical: Math.max(0, m.critical + (Math.random() < 0.2 ? 1 : 0)),
-        threats: Math.max(0, m.threats + (Math.random() < 0.4 ? 1 : -1)),
-        blocked: m.blocked + (Math.random() < 0.5 ? 1 : 0),
-      }));
-    }, 4000);
-    return () => clearInterval(id);
-  }, []);
+  if (authLoading || isLoading) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background gap-4">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <div className="text-muted-foreground text-sm">
+          {authLoading ? "Authenticating..." : "Loading dashboard data..."}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="max-w-md w-full bg-destructive/10 border border-destructive rounded-xl p-6 text-center">
+          <AlertTriangle className="h-10 w-10 text-destructive mx-auto mb-4" />
+          <h2 className="text-lg font-bold text-destructive mb-2">Error Loading Data</h2>
+          <p className="text-sm text-destructive/80 font-mono mb-4">{error.message}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!dashboardData) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="text-muted-foreground">No data available.</div>
+      </div>
+    );
+  }
+
+  const { metrics, trend, threatPatterns, geoOrigins, alerts } = dashboardData;
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -120,13 +140,13 @@ function DashboardPage() {
 
           {/* Trend + patterns */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-            <div className="xl:col-span-2"><AnomalyTrend /></div>
-            <div className="xl:col-span-1"><ThreatPatterns /></div>
+            <div className="xl:col-span-2"><AnomalyTrend data={trend} /></div>
+            <div className="xl:col-span-1"><ThreatPatterns data={threatPatterns} /></div>
           </div>
 
           {/* Geo + AI + Repeat */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-            <div className="xl:col-span-2"><GeoThreatMap /></div>
+            <div className="xl:col-span-2"><GeoThreatMap data={geoOrigins} /></div>
             <div className="xl:col-span-1 grid grid-cols-1 gap-4">
               <AIInsights />
             </div>

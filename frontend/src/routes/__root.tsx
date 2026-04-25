@@ -1,7 +1,11 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SidebarProvider } from "@/lib/sidebarContext";
+import { AuthProvider } from "@/lib/authContext";
 
 import appCss from "../styles.css?url";
+
+const queryClient = new QueryClient();
 
 function NotFoundComponent() {
   return (
@@ -72,8 +76,12 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   return (
-    <SidebarProvider>
-      <Outlet />
-    </SidebarProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <SidebarProvider>
+          <Outlet />
+        </SidebarProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }

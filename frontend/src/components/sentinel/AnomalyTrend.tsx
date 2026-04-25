@@ -1,13 +1,18 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import { generateTrend } from "@/lib/mockData";
 import { cn } from "@/lib/utils";
 
 const tabs = ["24h", "7d", "30d"] as const;
 
-export function AnomalyTrend() {
+interface AnomalyTrendProps {
+  data: Array<{ time: string; anomalies: number; critical: number }>;
+}
+
+export function AnomalyTrend({ data }: AnomalyTrendProps) {
   const [tab, setTab] = useState<(typeof tabs)[number]>("24h");
-  const data = useMemo(() => generateTrend(tab === "24h" ? 48 : tab === "7d" ? 56 : 60), [tab]);
+  
+  // Optional: slice data based on tab if needed, but for now we just render the provided data
+  const chartData = data || [];
 
   return (
     <div className="bg-card border border-border rounded-2xl p-5 shadow-[var(--shadow-soft)] h-full flex flex-col">
@@ -45,7 +50,7 @@ export function AnomalyTrend() {
 
       <div className="flex-1 min-h-[240px] -ml-2">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+          <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="anomGrad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="oklch(0.58 0.19 260)" stopOpacity={0.35} />
@@ -57,7 +62,7 @@ export function AnomalyTrend() {
               </linearGradient>
             </defs>
             <CartesianGrid stroke="oklch(0.93 0.01 255)" strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="time" stroke="oklch(0.55 0.035 257)" fontSize={10} tickLine={false} axisLine={false} interval={Math.floor(data.length / 6)} />
+            <XAxis dataKey="time" stroke="oklch(0.55 0.035 257)" fontSize={10} tickLine={false} axisLine={false} interval={Math.floor(chartData.length / 6)} />
             <YAxis stroke="oklch(0.55 0.035 257)" fontSize={10} tickLine={false} axisLine={false} width={32} />
             <Tooltip
               contentStyle={{

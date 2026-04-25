@@ -16,6 +16,7 @@ import { Route as LiveLogsRouteImport } from './routes/live-logs'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as IncidentResponseRouteImport } from './routes/incident-response'
 import { Route as GeoRouteImport } from './routes/geo'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -54,6 +55,11 @@ const GeoRoute = GeoRouteImport.update({
   path: '/geo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AlertsRoute = AlertsRouteImport.update({
   id: '/alerts',
   path: '/alerts',
@@ -68,6 +74,7 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/alerts': typeof AlertsRoute
+  '/auth': typeof AuthRoute
   '/geo': typeof GeoRoute
   '/incident-response': typeof IncidentResponseRoute
   '/integrations': typeof IntegrationsRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/alerts': typeof AlertsRoute
+  '/auth': typeof AuthRoute
   '/geo': typeof GeoRoute
   '/incident-response': typeof IncidentResponseRoute
   '/integrations': typeof IntegrationsRoute
@@ -91,6 +99,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/alerts': typeof AlertsRoute
+  '/auth': typeof AuthRoute
   '/geo': typeof GeoRoute
   '/incident-response': typeof IncidentResponseRoute
   '/integrations': typeof IntegrationsRoute
@@ -104,6 +113,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/alerts'
+    | '/auth'
     | '/geo'
     | '/incident-response'
     | '/integrations'
@@ -115,6 +125,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/alerts'
+    | '/auth'
     | '/geo'
     | '/incident-response'
     | '/integrations'
@@ -126,6 +137,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/alerts'
+    | '/auth'
     | '/geo'
     | '/incident-response'
     | '/integrations'
@@ -138,6 +150,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AlertsRoute: typeof AlertsRoute
+  AuthRoute: typeof AuthRoute
   GeoRoute: typeof GeoRoute
   IncidentResponseRoute: typeof IncidentResponseRoute
   IntegrationsRoute: typeof IntegrationsRoute
@@ -198,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GeoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/alerts': {
       id: '/alerts'
       path: '/alerts'
@@ -218,6 +238,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AlertsRoute: AlertsRoute,
+  AuthRoute: AuthRoute,
   GeoRoute: GeoRoute,
   IncidentResponseRoute: IncidentResponseRoute,
   IntegrationsRoute: IntegrationsRoute,

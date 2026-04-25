@@ -1,4 +1,3 @@
-import { geoOrigins } from "@/lib/mockData";
 import { cn } from "@/lib/utils";
 
 const intensityColor = {
@@ -15,7 +14,22 @@ const intensityLabel = {
   low: "bg-primary-soft text-primary",
 };
 
-export function GeoThreatMap() {
+export interface GeoOrigin {
+  country: string;
+  code: string;
+  x: number;
+  y: number;
+  threats: number;
+  intensity: "low" | "medium" | "high" | "critical";
+}
+
+interface GeoThreatMapProps {
+  data: Array<GeoOrigin>;
+}
+
+export function GeoThreatMap({ data }: GeoThreatMapProps) {
+  const geoOrigins = data || [];
+
   return (
     <div className="bg-card border border-border rounded-2xl p-5 shadow-[var(--shadow-soft)] h-full flex flex-col">
       <div className="flex items-start justify-between">

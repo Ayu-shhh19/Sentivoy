@@ -1,5 +1,4 @@
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from "recharts";
-import { threatPatterns } from "@/lib/mockData";
 
 const colors = [
   "oklch(0.62 0.24 22)",
@@ -9,7 +8,13 @@ const colors = [
   "oklch(0.68 0.16 152)",
 ];
 
-export function ThreatPatterns() {
+interface ThreatPatternsProps {
+  data: Array<{ name: string; value: number }>;
+}
+
+export function ThreatPatterns({ data }: ThreatPatternsProps) {
+  const chartData = data || [];
+
   return (
     <div className="bg-card border border-border rounded-2xl p-5 shadow-[var(--shadow-soft)] h-full flex flex-col">
       <div>
@@ -19,7 +24,7 @@ export function ThreatPatterns() {
 
       <div className="flex-1 min-h-[240px] mt-4 -ml-2">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={threatPatterns} layout="vertical" margin={{ left: 8, right: 16, top: 4, bottom: 0 }}>
+          <BarChart data={chartData} layout="vertical" margin={{ left: 8, right: 16, top: 4, bottom: 0 }}>
             <XAxis type="number" hide />
             <YAxis
               type="category"
@@ -41,7 +46,7 @@ export function ThreatPatterns() {
               }}
             />
             <Bar dataKey="value" radius={[6, 6, 6, 6]} barSize={14}>
-              {threatPatterns.map((_, i) => (
+              {chartData.map((_, i) => (
                 <Cell key={i} fill={colors[i % colors.length]} />
               ))}
             </Bar>

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Bell, Shield, Users, Key, Database, Sparkles } from "lucide-react";
 import { PageShell } from "@/components/sentinel/PageShell";
+import { ApiKeyPanel } from "@/components/sentinel/ApiKeyPanel";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/settings")({
@@ -100,32 +101,7 @@ function SettingsPage() {
 
         <div className="space-y-4">
           {active === "api" ? (
-            <div className="bg-card border border-border rounded-2xl shadow-[var(--shadow-soft)] overflow-hidden">
-              <div className="p-5 pb-3 flex items-center justify-between">
-                <div>
-                  <div className="text-[15px] font-semibold text-foreground">API Keys</div>
-                  <div className="text-xs text-muted-foreground mt-0.5">Programmatic access tokens</div>
-                </div>
-                <button className="h-8 px-3 rounded-lg bg-primary text-primary-foreground text-[12px] font-semibold hover:bg-primary/90">
-                  New key
-                </button>
-              </div>
-              <div className="divide-y divide-border">
-                {[
-                  { name: "ci-deploy", created: "Jan 4, 2026", last: "12 min ago" },
-                  { name: "datadog-bridge", created: "Dec 18, 2025", last: "2 h ago" },
-                  { name: "legacy-export", created: "Sep 11, 2025", last: "3 days ago" },
-                ].map((k) => (
-                  <div key={k.name} className="p-4 flex items-center justify-between text-[13px]">
-                    <div>
-                      <div className="font-mono font-semibold text-foreground">{k.name}</div>
-                      <div className="text-[11px] text-muted-foreground mt-0.5">Created {k.created} · Last used {k.last}</div>
-                    </div>
-                    <button className="text-[12px] font-semibold text-critical hover:underline">Revoke</button>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <ApiKeyPanel />
           ) : active === "data" ? (
             <div className="bg-card border border-border rounded-2xl p-5 shadow-[var(--shadow-soft)]">
               <div className="text-[15px] font-semibold text-foreground">Data Retention</div>

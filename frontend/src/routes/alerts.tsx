@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Filter, Download } from "lucide-react";
 import { PageShell } from "@/components/sentinel/PageShell";
 import { AlertsTable } from "@/components/sentinel/AlertsTable";
 import { AlertDrawer } from "@/components/sentinel/AlertDrawer";
-import { generateAlerts, type AlertRow, type AlertStatus } from "@/lib/mockData";
+import { type AlertRow, type AlertStatus } from "@/lib/mockData";
 import { cn } from "@/lib/utils";
+import { useDashboardData } from "@/hooks/useDashboardData";
 
 export const Route = createFileRoute("/alerts")({
   head: () => ({
@@ -18,9 +19,19 @@ export const Route = createFileRoute("/alerts")({
 });
 
 function AlertsPage() {
-  const all = useMemo(() => generateAlerts(40), []);
+  const { data: dashboardData, isLoading } = useDashboardData();
   const [tab, setTab] = useState<AlertStatus | "All">("All");
   const [selected, setSelected] = useState<AlertRow | null>(null);
+
+  if (isLoading || !dashboardData) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  const all = dashboardData.alerts || [];
 
   const counts = {
     All: all.length,

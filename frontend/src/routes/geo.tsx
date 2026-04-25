@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageShell } from "@/components/sentinel/PageShell";
 import { GeoThreatMap } from "@/components/sentinel/GeoThreatMap";
-import { geoOrigins } from "@/lib/mockData";
+import { useDashboardData } from "@/hooks/useDashboardData";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/geo")({
@@ -29,6 +29,18 @@ const repStyle = {
 };
 
 function GeoPage() {
+  const { data: dashboardData, isLoading } = useDashboardData();
+
+  if (isLoading || !dashboardData) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  const { geoOrigins } = dashboardData;
+
   return (
     <PageShell
       title="Geo Intelligence"
@@ -36,7 +48,7 @@ function GeoPage() {
     >
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         <div className="xl:col-span-2 min-h-[480px]">
-          <GeoThreatMap />
+          <GeoThreatMap data={geoOrigins} />
         </div>
 
         <div className="bg-card border border-border rounded-2xl shadow-[var(--shadow-soft)] overflow-hidden">

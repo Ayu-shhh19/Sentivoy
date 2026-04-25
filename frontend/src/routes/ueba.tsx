@@ -13,14 +13,6 @@ export const Route = createFileRoute("/ueba")({
   component: UebaPage,
 });
 
-const users = [
-  { name: "j.morrison@acme.io", role: "Engineer", risk: 92, baseline: 18, change: 412, country: "US → RU", status: "anomalous" },
-  { name: "svc-deploy", role: "Service", risk: 78, baseline: 240, change: 89, country: "US", status: "anomalous" },
-  { name: "k.tanaka@acme.io", role: "Admin", risk: 64, baseline: 32, change: 47, country: "JP", status: "watch" },
-  { name: "billing-bot", role: "Service", risk: 41, baseline: 1200, change: 12, country: "US", status: "watch" },
-  { name: "a.silva@acme.io", role: "Support", risk: 22, baseline: 24, change: -8, country: "BR", status: "normal" },
-  { name: "m.kowalski@acme.io", role: "Engineer", risk: 18, baseline: 28, change: -3, country: "PL", status: "normal" },
-];
 
 const statusStyle = {
   anomalous: "bg-critical/10 text-critical",
@@ -28,7 +20,29 @@ const statusStyle = {
   normal: "bg-success/10 text-success",
 };
 
+import { useDashboardData } from "@/hooks/useDashboardData";
+
 function UebaPage() {
+  const { data: dashboardData } = useDashboardData();
+
+  // Deduplicate users from alerts and mock risk scores
+  const derivedUsers = Array.from(new Set(dashboardData?.alerts?.map(a => a.user) || [])).map(user => {
+    const userAlerts = dashboardData!.alerts.filter(a => a.user === user);
+    const criticals = userAlerts.filter(a => a.severity === "Critical").length;
+    const highs = userAlerts.filter(a => a.severity === "High").length;
+    const risk = Math.min(100, Math.max(10, Math.floor(criticals * 40 + highs * 15)));
+    
+    return {
+      name: user,
+      role: user.includes('bot') || user.includes('deploy') ? 'Service' : 'User',
+      risk: risk,
+      baseline: userAlerts.length, 
+      change: Math.floor(userAlerts.length * 10),
+      country: userAlerts[0]?.country || 'UK',
+      status: risk >= 75 ? 'anomalous' : risk >= 50 ? 'watch' : 'normal'
+    };
+  }).sort((a,b) => b.risk - a.risk);
+
   return (
     <PageShell
       title="User Behavior (UEBA)"
@@ -77,7 +91,14 @@ function UebaPage() {
             </tr>
           </thead>
           <tbody>
-            {users.map((u) => (
+            {derivedUsers.length === 0 && (
+              <tr>
+                <td colSpan={7} className="p-8 text-center text-sm text-muted-foreground">
+                  No user behavioral anomalies detected yet.
+                </td>
+              </tr>
+            )}
+            {derivedUsers.map((u) => (
               <tr key={u.name} className="border-b border-border last:border-0 hover:bg-muted/40 transition">
                 <td className="px-5 py-3">
                   <div className="flex items-center gap-2.5">

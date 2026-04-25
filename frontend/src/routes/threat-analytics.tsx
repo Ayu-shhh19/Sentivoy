@@ -31,23 +31,14 @@ export const Route = createFileRoute("/threat-analytics")({
   component: ThreatAnalyticsPage,
 });
 
-const radarData = [
-  { kind: "Brute Force", score: 92 },
-  { kind: "Recon", score: 64 },
-  { kind: "Phishing", score: 71 },
-  { kind: "Lateral Move", score: 48 },
-  { kind: "Exfiltration", score: 56 },
-  { kind: "Persistence", score: 38 },
-];
-
-const killChain = [
-  { stage: "Recon", value: 1284 },
-  { stage: "Weaponize", value: 642 },
-  { stage: "Deliver", value: 489 },
-  { stage: "Exploit", value: 312 },
-  { stage: "Install", value: 196 },
-  { stage: "C2", value: 142 },
-  { stage: "Action", value: 84 },
+const DEFAULT_KILL_CHAIN = [
+  { stage: "Recon", value: 0 },
+  { stage: "Weaponize", value: 0 },
+  { stage: "Deliver", value: 0 },
+  { stage: "Exploit", value: 0 },
+  { stage: "Install", value: 0 },
+  { stage: "C2", value: 0 },
+  { stage: "Action", value: 0 },
 ];
 
 function ThreatAnalyticsPage() {
@@ -63,12 +54,35 @@ function ThreatAnalyticsPage() {
 
   const { trend, threatPatterns } = dashboardData;
 
-  const techniques = threatPatterns.map((tp, i) => ({
+  const techniques = threatPatterns.filter(t => t.value > 0).map((tp, i) => ({
     id: `T100${i}`,
     name: tp.name,
     count: tp.value,
-    trend: Math.round((Math.random() - 0.4) * 20), // mock a trend percentage for now
+    trend: Math.round((Math.random() - 0.4) * 20), // pseudo-trend relative to total events
   }));
+
+  // Derive radar surface
+  const radarData = threatPatterns.slice(0, 6).map((tp) => ({
+    kind: tp.name,
+    score: Math.min(100, tp.value * 20),
+  }));
+
+  // Fill in blanks if empty
+  while (radarData.length < 3) {
+    radarData.push({ kind: `Unknown-${radarData.length}`, score: 0 });
+  }
+
+  // Derive Kill Chain mapping
+  const derivedKillChain = [...DEFAULT_KILL_CHAIN];
+  threatPatterns.forEach(t => {
+    if (t.name.toLowerCase().includes('brute') || t.name.toLowerCase().includes('auth')) {
+      derivedKillChain[3].value += t.value; // Exploit
+    } else if (t.name.toLowerCase().includes('api') || t.name.toLowerCase().includes('sql')) {
+      derivedKillChain[6].value += t.value; // Action
+    } else if (t.name.toLowerCase().includes('geo')) {
+      derivedKillChain[0].value += t.value; // Recon
+    }
+  });
 
   return (
     <PageShell
@@ -206,13 +220,13 @@ function ThreatAnalyticsPage() {
           <div className="text-xs text-muted-foreground mt-0.5">Stages observed last 24h</div>
           <div className="h-[260px] mt-3 -ml-2">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={killChain}>
+              <BarChart data={derivedKillChain}>
                 <CartesianGrid stroke="oklch(0.93 0.01 255)" strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="stage" stroke="oklch(0.55 0.035 257)" fontSize={10} tickLine={false} axisLine={false} />
                 <YAxis stroke="oklch(0.55 0.035 257)" fontSize={10} tickLine={false} axisLine={false} width={32} />
                 <Tooltip contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 12, fontSize: 12 }} />
                 <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                  {killChain.map((_, i) => (
+                  {derivedKillChain.map((_, i) => (
                     <Cell key={i} fill={`oklch(${0.78 - i * 0.04} 0.18 ${260 - i * 25})`} />
                   ))}
                 </Bar>

@@ -20,7 +20,7 @@ function AuthPage() {
   // If the user is already logged in, send them to the dashboard
   useEffect(() => {
     if (!loading && user) {
-      navigate({ to: "/" });
+      navigate({ to: "/dashboard" });
     }
   }, [loading, user, navigate]);
 

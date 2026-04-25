@@ -5,7 +5,7 @@ import os
 
 from app.core.config import get_settings
 from app.core.rate_limiter import setup_rate_limiter
-from app.api import logs, anomalies, keys, dashboard, reports, notifications
+from app.api import logs, anomalies, keys, dashboard, reports, notifications, live_logs
 from app.ml.autoencoder import load_model
 
 load_dotenv()
@@ -38,6 +38,7 @@ app.include_router(keys.router)
 app.include_router(dashboard.router)
 app.include_router(reports.router)
 app.include_router(notifications.router)
+app.include_router(live_logs.router)
 
 @app.on_event("startup")
 async def startup_event():

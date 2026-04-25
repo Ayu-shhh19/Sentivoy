@@ -14,10 +14,12 @@ import {
   BarChart3,
   PanelLeftClose,
   PanelLeft,
+  LogOut,
 } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "@/lib/sidebarContext";
+import { useAuth } from "@/lib/authContext";
 import {
   Tooltip,
   TooltipContent,
@@ -43,7 +45,7 @@ type NavGroup = {
 };
 
 const primaryNav: NavItem[] = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/alerts", label: "Alerts", icon: AlertTriangle, badge: "46" },
   { to: "/live-logs", label: "Live Logs", icon: ScrollText },
   { to: "/geo", label: "Geo Intelligence", icon: Globe2 },
@@ -142,6 +144,8 @@ function CollapsedNavLink({ item, pathname }: { item: NavItem; pathname: string 
 // ─── Expanded sidebar content ────────────────────────────────────────────────
 
 function SidebarExpanded({ pathname, onClose }: { pathname: string; onClose?: () => void }) {
+  const { signOut } = useAuth();
+  
   const [analyticsOpen, setAnalyticsOpen] = useState(() => {
     return analyticsGroup.children.some((c) => pathname.startsWith(c.to));
   });
@@ -239,6 +243,14 @@ function SidebarExpanded({ pathname, onClose }: { pathname: string; onClose?: ()
           <HelpCircle className="h-[18px] w-[18px] text-muted-foreground shrink-0" strokeWidth={1.8} />
           <span>Help &amp; Support</span>
         </button>
+
+        <button 
+          onClick={() => signOut()}
+          className="w-full flex items-center gap-3 px-3 py-[9px] rounded-xl text-[13.5px] font-medium text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-all duration-150 mb-4"
+        >
+          <LogOut className="h-[18px] w-[18px] shrink-0" strokeWidth={1.8} />
+          <span>Sign Out</span>
+        </button>
       </nav>
 
       {/* Upgrade card */}
@@ -264,6 +276,7 @@ function SidebarExpanded({ pathname, onClose }: { pathname: string; onClose?: ()
 // ─── Collapsed sidebar content (icon-only) ───────────────────────────────────
 
 function SidebarCollapsed({ pathname }: { pathname: string }) {
+  const { signOut } = useAuth();
   const isAnalyticsActive = analyticsGroup.children.some((c) => pathname.startsWith(c.to));
 
   return (
@@ -302,6 +315,20 @@ function SidebarCollapsed({ pathname }: { pathname: string }) {
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={8}>
               Help &amp; Support
+            </TooltipContent>
+          </Tooltip>
+          
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <button 
+                onClick={() => signOut()}
+                className="flex items-center justify-center mt-2 h-10 w-10 rounded-xl text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-all duration-150"
+              >
+                <LogOut className="h-[18px] w-[18px]" strokeWidth={1.8} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={8}>
+              Sign Out
             </TooltipContent>
           </Tooltip>
         </nav>

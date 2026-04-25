@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/authContext";
-import type { AlertRow } from "@/lib/mockData";
+import type { AlertRow } from "@/lib/types";
 
 export interface DashboardData {
   metrics: {

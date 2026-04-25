@@ -13,45 +13,6 @@ export const Route = createFileRoute("/incident-response")({
   component: IncidentPage,
 });
 
-const incidents = [
-  {
-    id: "INC-2041",
-    title: "Credential stuffing campaign — j.morrison",
-    severity: "Critical",
-    status: "active",
-    opened: "12 min ago",
-    owner: "A. Chen",
-    progress: 35,
-  },
-  {
-    id: "INC-2040",
-    title: "Suspicious privileged role assignment",
-    severity: "High",
-    status: "active",
-    opened: "1 h ago",
-    owner: "M. Patel",
-    progress: 62,
-  },
-  {
-    id: "INC-2039",
-    title: "Unusual S3 egress on data-pipe",
-    severity: "High",
-    status: "resolving",
-    opened: "3 h ago",
-    owner: "L. Berg",
-    progress: 88,
-  },
-  {
-    id: "INC-2038",
-    title: "TLS downgrade attempts on edge-gw",
-    severity: "Medium",
-    status: "closed",
-    opened: "Yesterday",
-    owner: "A. Chen",
-    progress: 100,
-  },
-];
-
 const playbooks = [
   { name: "Credential Stuffing Response", steps: 7, runs: 142 },
   { name: "Ransomware Containment", steps: 12, runs: 23 },
@@ -71,7 +32,26 @@ const statusStyle = {
   closed: "bg-success/10 text-success",
 };
 
+import { useDashboardData } from "@/hooks/useDashboardData";
+
 function IncidentPage() {
+  const { data: dashboardData } = useDashboardData();
+  
+  // Derive simple incidents from the latest alerts
+  const derivedIncidents = (dashboardData?.alerts || []).slice(0, 5).map((a) => {
+    // Map alert properties to incident properties roughly
+    const isClosed = a.status === "Resolved";
+    return {
+      id: "INC-" + a.id.substring(0, 4).toUpperCase(),
+      title: `${a.event} involving ${a.user}`,
+      severity: a.severity,
+      status: isClosed ? "closed" : "active",
+      opened: new Date(a.timestamp).toLocaleString(),
+      owner: "Unassigned",
+      progress: isClosed ? 100 : Math.floor(Math.random() * 50) + 10,
+    };
+  });
+
   return (
     <PageShell
       title="Incident Response"
@@ -114,13 +94,16 @@ function IncidentPage() {
             <div className="text-xs text-muted-foreground mt-0.5">Sorted by recency</div>
           </div>
           <div className="divide-y divide-border">
-            {incidents.map((i) => (
+            {derivedIncidents.length === 0 && (
+              <div className="p-8 text-center text-sm text-muted-foreground">No incidents currently match alert constraints.</div>
+            )}
+            {derivedIncidents.map((i) => (
               <div key={i.id} className={cn("p-5 hover:bg-muted/40 transition cursor-pointer", i.severity === "Critical" && "border-l-2 border-l-critical")}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-mono text-[11px] font-semibold text-primary">{i.id}</span>
-                      <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-md", sevStyle[i.severity as keyof typeof sevStyle])}>
+                      <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-md", sevStyle[i.severity as keyof typeof sevStyle] || sevStyle.Medium)}>
                         {i.severity}
                       </span>
                       <span className={cn("text-[10px] font-semibold capitalize px-2 py-0.5 rounded-md", statusStyle[i.status as keyof typeof statusStyle])}>

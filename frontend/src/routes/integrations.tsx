@@ -14,12 +14,13 @@ export const Route = createFileRoute("/integrations")({
 });
 
 const integrations = [
-  { name: "AWS CloudTrail", category: "Cloud", connected: true, events: "1.2M / day", color: "oklch(0.78 0.15 60)" },
-  { name: "Okta", category: "Identity", connected: true, events: "84K / day", color: "oklch(0.58 0.19 260)" },
-  { name: "GitHub Audit", category: "DevOps", connected: true, events: "12K / day", color: "oklch(0.30 0.03 264)" },
-  { name: "Datadog", category: "Observability", connected: true, events: "412K / day", color: "oklch(0.62 0.18 300)" },
-  { name: "Slack", category: "Notifications", connected: true, events: "—", color: "oklch(0.68 0.16 152)" },
-  { name: "PagerDuty", category: "On-call", connected: true, events: "—", color: "oklch(0.68 0.16 152)" },
+  { name: "Sentivoy Cloud Node", category: "Edge", connected: true, events: "Processing", color: "oklch(0.58 0.19 260)" },
+  { name: "AWS CloudTrail", category: "Cloud", connected: false, events: "Not connected", color: "oklch(0.78 0.15 60)" },
+  { name: "Okta", category: "Identity", connected: false, events: "Not connected", color: "oklch(0.58 0.19 260)" },
+  { name: "GitHub Audit", category: "DevOps", connected: false, events: "Not connected", color: "oklch(0.30 0.03 264)" },
+  { name: "Datadog", category: "Observability", connected: false, events: "Not connected", color: "oklch(0.62 0.18 300)" },
+  { name: "Slack", category: "Notifications", connected: false, events: "Not connected", color: "oklch(0.68 0.16 152)" },
+  { name: "PagerDuty", category: "On-call", connected: false, events: "Not connected", color: "oklch(0.68 0.16 152)" },
   { name: "Google Workspace", category: "Identity", connected: false, events: "Not connected", color: "oklch(0.58 0.19 260)" },
   { name: "Azure AD", category: "Identity", connected: false, events: "Not connected", color: "oklch(0.58 0.19 260)" },
   { name: "Splunk", category: "SIEM", connected: false, events: "Not connected", color: "oklch(0.62 0.24 22)" },

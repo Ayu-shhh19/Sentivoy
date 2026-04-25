@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Pause, Play, Search, Trash2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/sentinel/PageShell";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/authContext";
 
 export const Route = createFileRoute("/live-logs")({
   head: () => ({
@@ -23,18 +25,6 @@ interface LogLine {
   msg: string;
 }
 
-const sources = ["auth-svc", "edge-gw", "k8s-api", "billing-svc", "iam", "cdn", "data-pipe"];
-const messages: { level: Level; msg: string }[] = [
-  { level: "info", msg: "user session refreshed token=eyJ…" },
-  { level: "info", msg: "GET /api/v1/health 200 4ms" },
-  { level: "warn", msg: "rate-limit hit ip=185.220.101.42 threshold=120/min" },
-  { level: "warn", msg: "TLS handshake retry host=api.acme.io" },
-  { level: "error", msg: "auth failed user=root reason=invalid_password" },
-  { level: "error", msg: "DB connection pool exhausted (32/32)" },
-  { level: "critical", msg: "🚨 brute-force pattern detected ip=92.118.39.12" },
-  { level: "critical", msg: "🚨 SQL injection signature on /api/v2/search" },
-];
-
 const levelStyle: Record<Level, string> = {
   info: "text-muted-foreground",
   warn: "text-[oklch(0.55_0.13_70)]",
@@ -49,34 +39,47 @@ const levelDot: Record<Level, string> = {
   critical: "bg-critical",
 };
 
-function makeLog(): LogLine {
-  const m = messages[Math.floor(Math.random() * messages.length)];
-  return {
-    id: Math.random().toString(36).slice(2),
-    ts: new Date().toISOString().split("T")[1].split(".")[0],
-    level: m.level,
-    source: sources[Math.floor(Math.random() * sources.length)],
-    msg: m.msg,
-  };
-}
-
 function LiveLogsPage() {
-  const [logs, setLogs] = useState<LogLine[]>(() => Array.from({ length: 30 }, makeLog));
+  const { session } = useAuth();
   const [paused, setPaused] = useState(false);
   const [filter, setFilter] = useState("");
   const [levelFilter, setLevelFilter] = useState<Level | "all">("all");
+  const [logs, setLogs] = useState<LogLine[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (paused) return;
-    const id = setInterval(() => {
-      setLogs((prev) => {
-        const next = [...prev, makeLog()];
-        return next.slice(-200);
+  const { data: fetchedLogs } = useQuery<LogLine[]>({
+    queryKey: ["liveLogs"],
+    queryFn: async () => {
+      if (!session?.access_token) throw new Error("No session");
+      const res = await fetch("http://localhost:8000/api/live-logs?limit=50", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
-    }, 700);
-    return () => clearInterval(id);
-  }, [paused]);
+      if (!res.ok) throw new Error("Failed to fetch logs");
+      const data = await res.json();
+      return data.reverse(); // backend sorts desc, we want oldest first for appending
+    },
+    enabled: !!session?.access_token && !paused,
+    refetchInterval: 2000,
+  });
+
+  useEffect(() => {
+    if (fetchedLogs && !paused) {
+      setLogs((prev) => {
+        // Merge without duplicating IDs
+        const existingIds = new Set(prev.map((l) => l.id));
+        const newLogs = fetchedLogs.filter((l) => !existingIds.has(l.id));
+        if (newLogs.length === 0) return prev;
+        
+        // Ensure timestamp is parsed properly for display
+        const displayLogs = newLogs.map(l => ({
+          ...l,
+          ts: l.ts ? new Date(l.ts).toLocaleTimeString() : new Date().toLocaleTimeString()
+        }));
+        
+        return [...prev, ...displayLogs].slice(-200);
+      });
+    }
+  }, [fetchedLogs, paused]);
 
   useEffect(() => {
     if (!paused && scrollRef.current) {

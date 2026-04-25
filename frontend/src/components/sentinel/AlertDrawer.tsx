@@ -1,6 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ShieldCheck, Ban, UserX, AlertTriangle } from "lucide-react";
-import type { AlertRow } from "@/lib/mockData";
+import type { AlertRow } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface Props {

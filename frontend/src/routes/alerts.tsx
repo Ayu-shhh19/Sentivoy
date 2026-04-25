@@ -4,7 +4,7 @@ import { Filter, Download } from "lucide-react";
 import { PageShell } from "@/components/sentinel/PageShell";
 import { AlertsTable } from "@/components/sentinel/AlertsTable";
 import { AlertDrawer } from "@/components/sentinel/AlertDrawer";
-import { type AlertRow, type AlertStatus } from "@/lib/mockData";
+import { type AlertRow, type AlertStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useDashboardData } from "@/hooks/useDashboardData";
 

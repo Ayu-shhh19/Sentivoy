@@ -14,18 +14,11 @@ export const Route = createFileRoute("/geo")({
   component: GeoPage,
 });
 
-const asns = [
-  { asn: "AS9009", org: "M247 Ltd", country: "RO", reputation: "malicious", threats: 412 },
-  { asn: "AS14061", org: "DigitalOcean", country: "US", reputation: "suspicious", threats: 287 },
-  { asn: "AS4134", org: "China Telecom", country: "CN", reputation: "malicious", threats: 196 },
-  { asn: "AS16509", org: "Amazon AWS", country: "US", reputation: "neutral", threats: 134 },
-  { asn: "AS200651", org: "Flokinet", country: "SC", reputation: "malicious", threats: 98 },
-];
-
 const repStyle = {
-  malicious: "bg-critical/10 text-critical",
-  suspicious: "bg-warning/15 text-[oklch(0.5_0.13_70)]",
-  neutral: "bg-muted text-muted-foreground",
+  critical: "bg-critical/10 text-critical",
+  high: "bg-warning/15 text-[oklch(0.5_0.13_70)]",
+  medium: "bg-primary-soft text-primary",
+  low: "bg-muted text-muted-foreground",
 };
 
 function GeoPage() {
@@ -80,33 +73,38 @@ function GeoPage() {
 
       <div className="bg-card border border-border rounded-2xl shadow-[var(--shadow-soft)] overflow-hidden">
         <div className="p-5 pb-3">
-          <div className="text-[15px] font-semibold text-foreground">ASN Reputation</div>
-          <div className="text-xs text-muted-foreground mt-0.5">Autonomous systems ranked by hostile traffic</div>
+          <div className="text-[15px] font-semibold text-foreground">Active Regions</div>
+          <div className="text-xs text-muted-foreground mt-0.5">Regions ranked by hostile traffic intensity</div>
         </div>
         <table className="w-full text-[13px]">
           <thead>
             <tr className="text-left text-muted-foreground border-b border-border">
-              <th className="font-medium px-5 py-2.5 text-[11px] uppercase tracking-wider">ASN</th>
-              <th className="font-medium px-3 py-2.5 text-[11px] uppercase tracking-wider">Organization</th>
-              <th className="font-medium px-3 py-2.5 text-[11px] uppercase tracking-wider">Country</th>
-              <th className="font-medium px-3 py-2.5 text-[11px] uppercase tracking-wider">Reputation</th>
-              <th className="font-medium px-5 py-2.5 text-[11px] uppercase tracking-wider">Threats</th>
+              <th className="font-medium px-5 py-2.5 text-[11px] uppercase tracking-wider">Country Code</th>
+              <th className="font-medium px-3 py-2.5 text-[11px] uppercase tracking-wider">Country Name</th>
+              <th className="font-medium px-3 py-2.5 text-[11px] uppercase tracking-wider">Intensity</th>
+              <th className="font-medium px-5 py-2.5 text-[11px] uppercase tracking-wider">Detected Threats</th>
             </tr>
           </thead>
           <tbody>
-            {asns.map((a) => (
-              <tr key={a.asn} className="border-b border-border last:border-0 hover:bg-muted/40 transition">
-                <td className="px-5 py-3 font-mono text-primary font-semibold">{a.asn}</td>
-                <td className="px-3 py-3 text-foreground">{a.org}</td>
-                <td className="px-3 py-3 text-muted-foreground font-mono text-[12px]">{a.country}</td>
+            {(geoOrigins || []).sort((a,b) => b.threats - a.threats).map((g) => (
+              <tr key={g.code} className="border-b border-border last:border-0 hover:bg-muted/40 transition">
+                <td className="px-5 py-3 font-mono text-primary font-semibold">{g.code}</td>
+                <td className="px-3 py-3 text-foreground">{g.country}</td>
                 <td className="px-3 py-3">
-                  <span className={cn("text-[10.5px] font-semibold capitalize px-2 py-0.5 rounded-md", repStyle[a.reputation as keyof typeof repStyle])}>
-                    {a.reputation}
+                  <span className={cn("text-[10.5px] font-semibold capitalize px-2 py-0.5 rounded-md", repStyle[g.intensity as keyof typeof repStyle])}>
+                    {g.intensity}
                   </span>
                 </td>
-                <td className="px-5 py-3 text-foreground tabular-nums font-semibold">{a.threats}</td>
+                <td className="px-5 py-3 text-foreground tabular-nums font-semibold">{g.threats}</td>
               </tr>
             ))}
+            {geoOrigins.length === 0 && (
+              <tr>
+                <td colSpan={4} className="p-8 text-center text-sm text-muted-foreground">
+                  No geographical data available yet.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

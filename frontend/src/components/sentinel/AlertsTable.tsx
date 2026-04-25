@@ -1,5 +1,5 @@
 import { MoreHorizontal } from "lucide-react";
-import type { AlertRow, Severity, AlertStatus } from "@/lib/mockData";
+import type { AlertRow, Severity, AlertStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const sevStyles: Record<Severity, string> = {

@@ -7,6 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from collections import defaultdict
 from datetime import datetime, timedelta
 import random
+import httpx
+from functools import lru_cache
 
 from app.models.schemas import DashboardSummaryResponse, TrendPoint, ThreatPattern, GeoOrigin, AlertRow
 from app.db.supabase_client import get_supabase
@@ -15,19 +17,43 @@ from app.core.security import verify_supabase_token
 
 router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
 
-def resolve_country(ip: str) -> tuple[str, str, int, int]:
-    """Mock IP to country resolution."""
-    # A tiny mock dictionary for realism
-    mapping = [
-        ("United States", "US", 240, 200),
-        ("Russia", "RU", 660, 130),
-        ("China", "CN", 760, 200),
-        ("Brazil", "BR", 360, 320),
-        ("Germany", "DE", 510, 160)
-    ]
-    # Deterministic based on IP length to keep it consistent
-    idx = len(ip) % len(mapping)
-    return mapping[idx]
+# Cache local IP resolutions to memory to easily handle frequent dashboard reloads without hitting API limits
+_geoip_cache = {}
+
+async def resolve_ips_batch(ips: list[str]) -> dict:
+    """Resolve a batch of IPs to coordinates using ip-api.com (free tier batch)."""
+    # Filter out what we already have
+    to_resolve = [ip for ip in ips if ip not in _geoip_cache and ip != "unknown"]
+    
+    # Simple hardcoded fallback for local/private IPs and preventing excessive API calls
+    if to_resolve:
+        # Keep chunk size reasonable (ip-api technically allows 100)
+        chunks = [to_resolve[i:i+50] for i in range(0, len(to_resolve), 50)]
+        for chunk in chunks:
+            try:
+                # Format: [{"query": "ip1"}, {"query": "ip2"}]
+                payload = [{"query": ip, "fields": "status,country,countryCode,lat,lon"} for ip in chunk]
+                async with httpx.AsyncClient() as client:
+                    resp = await client.post("http://ip-api.com/batch", json=payload, timeout=5.0)
+                    if resp.status_code == 200:
+                        results = resp.json()
+                        for i, r in enumerate(results):
+                            if r.get("status") == "success":
+                                _geoip_cache[chunk[i]] = (
+                                    r.get("country", "Unknown"),
+                                    r.get("countryCode", "--"),
+                                    r.get("lon", 0.0),
+                                    r.get("lat", 0.0)
+                                )
+                            else:
+                                _geoip_cache[chunk[i]] = ("Reserved", "--", 0.0, 0.0)
+            except Exception as e:
+                print(f"Error fetching GeoIP: {e}")
+                for ip in chunk:
+                    _geoip_cache[ip] = ("Offline", "--", 0.0, 0.0)
+
+    # Return mapping of requested IPs
+    return {ip: _geoip_cache.get(ip, ("Unknown", "--", 0.0, 0.0)) for ip in ips}
 
 
 @router.get("/summary", response_model=DashboardSummaryResponse)
@@ -120,27 +146,48 @@ async def get_dashboard_summary(user: dict = Depends(verify_supabase_token)):
             threat_patterns = [ThreatPattern(name="No threats yet", value=0)]
 
         # Geo Origins
-        geo_counts = defaultdict(int)
+        # Gather all required IPs
+        ips_to_resolve = set()
         for a in anomalies_data:
             log = logs_data.get(a["log_id"])
-            if log and a["is_anomaly"]:
-                country, code, x, y = resolve_country(log["ip_address"])
-                geo_counts[code] += 1
+            if log and a["is_anomaly"] and "ip_address" in log:
+                ips_to_resolve.add(log["ip_address"])
+                
+        # Bulk resolve asynchronously
+        ip_mapping = await resolve_ips_batch(list(ips_to_resolve))
+        
+        # Aggregate logic
+        geo_nodes = {}
+        for a in anomalies_data:
+            log = logs_data.get(a["log_id"])
+            if log and a["is_anomaly"] and "ip_address" in log:
+                ip = log["ip_address"]
+                country, code, lon, lat = ip_mapping.get(ip, ("Unknown", "--", 0.0, 0.0))
+                
+                # Combine identical location hits dynamically 
+                key = f"{lat}:{lon}"
+                if key not in geo_nodes:
+                    geo_nodes[key] = {
+                        "country": country,
+                        "code": code,
+                        "x": lon,  # react-simple-maps expects [longitude, latitude] where lon is x 
+                        "y": lat,
+                        "threats": 0
+                    }
+                geo_nodes[key]["threats"] += 1
                 
         geo_origins = []
-        for code, count in geo_counts.items():
-            # Find the country details
-            for country, c_code, x, y in [("United States", "US", 240, 200), ("Russia", "RU", 660, 130), ("China", "CN", 760, 200), ("Brazil", "BR", 360, 320), ("Germany", "DE", 510, 160)]:
-                if c_code == code:
-                    intensity = "critical" if count > 10 else "high" if count > 5 else "medium"
-                    geo_origins.append(GeoOrigin(
-                        country=country, code=code, x=x, y=y, threats=count, intensity=intensity
-                    ))
-                    break
+        for v in geo_nodes.values():
+            if v["code"] != "--" and v["threats"] > 0:
+                count = v["threats"]
+                intensity = "critical" if count > 10 else "high" if count > 5 else "medium"
+                geo_origins.append(GeoOrigin(
+                    country=v["country"], code=v["code"], x=v["x"], y=v["y"], threats=count, intensity=intensity
+                ))
         
         if not geo_origins:
             # Provide at least one empty node for the map
-            geo_origins.append(GeoOrigin(country="Monitoring", code="--", x=500, y=250, threats=0, intensity="low"))
+            geo_origins.append(GeoOrigin(country="Monitoring", code="--", x=0, y=0, threats=0, intensity="low"))
 
         # Alerts (Latest 10)
         alerts = []
@@ -148,7 +195,8 @@ async def get_dashboard_summary(user: dict = Depends(verify_supabase_token)):
         for a in sorted_anomalies:
             log = logs_data.get(a["log_id"])
             if log:
-                country, code, _, _ = resolve_country(log["ip_address"])
+                ip = log.get("ip_address", "unknown")
+                country, code, _, _ = ip_mapping.get(ip, ("Unknown", "--", 0.0, 0.0))
                 alerts.append(AlertRow(
                     id=a["log_id"],
                     timestamp=log["timestamp"],

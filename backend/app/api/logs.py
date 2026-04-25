@@ -69,6 +69,10 @@ async def ingest_log(
     # Format datetime for Supabase
     log_data["timestamp"] = log.timestamp.isoformat()
     
+    # Remove fields not present in the Supabase 'logs' table
+    log_data.pop("user_role", None)
+    log_data.pop("metadata", None)
+    
     # Store raw log (synchronous in this setup, could be async)
     try:
         supabase.table("logs").insert(log_data).execute()

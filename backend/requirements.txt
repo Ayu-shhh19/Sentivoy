@@ -19,3 +19,9 @@ httpx==0.28.1
 
 # Rate limiting
 slowapi==0.1.9
+
+# Email (Resend)
+resend>=2.0.0
+
+# PDF generation
+reportlab>=4.0.0

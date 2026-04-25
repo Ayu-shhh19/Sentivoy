@@ -28,9 +28,10 @@ export const Route = createFileRoute("/")({
 });
 
 function DashboardPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, session, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [selected, setSelected] = useState<AlertRow | null>(null);
+  const [exporting, setExporting] = useState(false);
   
   const { data: dashboardData, isLoading, error } = useDashboardData();
 
@@ -92,8 +93,40 @@ function DashboardPage() {
               <button className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-border bg-card text-[13px] font-medium hover:bg-muted transition">
                 <Plus className="h-3.5 w-3.5" /> Add widget
               </button>
-              <button className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-foreground text-background text-[13px] font-semibold hover:opacity-90 transition">
-                <Download className="h-3.5 w-3.5" /> Export report
+              <button
+                onClick={async () => {
+                  if (!session?.access_token) return;
+                  setExporting(true);
+                  try {
+                    const res = await fetch("http://localhost:8000/api/reports/pdf", {
+                      headers: { Authorization: `Bearer ${session.access_token}` },
+                    });
+                    if (!res.ok) throw new Error("Failed to generate report");
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "sentivoy_security_report.pdf";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                  } catch (err) {
+                    console.error("Export failed:", err);
+                    alert("Failed to export report. Please try again.");
+                  } finally {
+                    setExporting(false);
+                  }
+                }}
+                disabled={exporting}
+                className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-foreground text-background text-[13px] font-semibold hover:opacity-90 transition disabled:opacity-50"
+              >
+                {exporting ? (
+                  <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                ) : (
+                  <Download className="h-3.5 w-3.5" />
+                )}
+                {exporting ? "Generating..." : "Export report"}
               </button>
             </div>
           </div>

@@ -30,6 +30,11 @@ class Settings(BaseSettings):
     anomaly_threshold: float = 0.05
     rate_limit: int = 60  # requests per minute
 
+    # ── Email (Resend) ───────────────────────────────
+    resend_api_key: str = ""
+    resend_from_email: str = "onboarding@resend.dev"
+    alert_email_enabled: bool = True
+
     model_config = {
         "env_file": os.path.join(os.path.dirname(__file__), "..", "..", ".env"),
         "env_file_encoding": "utf-8",

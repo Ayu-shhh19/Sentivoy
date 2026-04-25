@@ -154,3 +154,27 @@ class DashboardSummaryResponse(BaseModel):
     geoOrigins: List[GeoOrigin]
     alerts: List[AlertRow]
 
+
+# ── Email / Notification Schemas ─────────────────────────────────────────────
+
+class EmailAlertRequest(BaseModel):
+    """Request to manually send an alert email."""
+    email: Optional[str] = Field(default=None, description="Override recipient email")
+    severity: SeverityLevel = Field(default=SeverityLevel.CRITICAL)
+    message: Optional[str] = Field(default=None, description="Custom message")
+
+class ReportRequest(BaseModel):
+    """Request to generate a PDF report with optional filters."""
+    days: int = Field(default=30, ge=1, le=365, description="Report period in days")
+    include_recommendations: bool = Field(default=True)
+
+class NotificationLog(BaseModel):
+    """Record of a sent notification."""
+    id: Optional[str] = None
+    tenant_id: str
+    email: str
+    alert_type: str  # "critical_alert", "report", "test"
+    status: str  # "sent", "failed"
+    sent_at: Optional[str] = None
+
+

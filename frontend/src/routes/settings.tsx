@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Bell, Shield, Users, Key, Database, Sparkles } from "lucide-react";
+import { Bell, Shield, Users, Key, Database, Sparkles, Send, CheckCircle2, XCircle } from "lucide-react";
 import { PageShell } from "@/components/sentinel/PageShell";
 import { ApiKeyPanel } from "@/components/sentinel/ApiKeyPanel";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/authContext";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -44,6 +45,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
 }
 
 function SettingsPage() {
+  const { session } = useAuth();
   const [active, setActive] = useState<(typeof sections)[number]["id"]>("general");
   const [toggles, setToggles] = useState({
     realtime: true,
@@ -53,8 +55,38 @@ function SettingsPage() {
     sso: true,
     mfaRequired: true,
   });
+  const [testAlertLoading, setTestAlertLoading] = useState(false);
+  const [testAlertResult, setTestAlertResult] = useState<{ success: boolean; message: string } | null>(null);
 
   const update = (k: keyof typeof toggles) => (v: boolean) => setToggles((p) => ({ ...p, [k]: v }));
+
+  const sendTestAlert = async () => {
+    if (!session?.access_token) return;
+    setTestAlertLoading(true);
+    setTestAlertResult(null);
+    try {
+      const res = await fetch("http://localhost:8000/api/notifications/test", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      setTestAlertResult({
+        success: data.success,
+        message: data.success
+          ? `Test alert sent to ${data.email_sent_to}`
+          : data.message || "Failed to send test alert",
+      });
+    } catch (err) {
+      setTestAlertResult({ success: false, message: "Network error. Is the backend running?" });
+    } finally {
+      setTestAlertLoading(false);
+      setTimeout(() => setTestAlertResult(null), 5000);
+    }
+  };
 
   const settingItems: Record<string, { label: string; sub: string; key: keyof typeof toggles }[]> = {
     general: [
@@ -127,20 +159,65 @@ function SettingsPage() {
               </div>
             </div>
           ) : (
-            <div className="bg-card border border-border rounded-2xl shadow-[var(--shadow-soft)] divide-y divide-border">
-              {(settingItems[active] ?? []).map((item) => (
-                <div key={item.label} className="p-5 flex items-center justify-between gap-4">
-                  <div className="min-w-0">
-                    <div className="text-[13.5px] font-medium text-foreground">{item.label}</div>
-                    <div className="text-[11.5px] text-muted-foreground mt-0.5">{item.sub}</div>
+            <>
+              <div className="bg-card border border-border rounded-2xl shadow-[var(--shadow-soft)] divide-y divide-border">
+                {(settingItems[active] ?? []).map((item) => (
+                  <div key={item.label} className="p-5 flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="text-[13.5px] font-medium text-foreground">{item.label}</div>
+                      <div className="text-[11.5px] text-muted-foreground mt-0.5">{item.sub}</div>
+                    </div>
+                    <Toggle on={toggles[item.key]} onChange={update(item.key)} />
                   </div>
-                  <Toggle on={toggles[item.key]} onChange={update(item.key)} />
+                ))}
+                {(settingItems[active] ?? []).length === 0 && (
+                  <div className="p-8 text-center text-sm text-muted-foreground">Nothing to configure here.</div>
+                )}
+              </div>
+
+              {/* Email Alert Test Section — only on notifications tab */}
+              {active === "notifications" && (
+                <div className="bg-card border border-border rounded-2xl p-5 shadow-[var(--shadow-soft)]">
+                  <div className="text-[15px] font-semibold text-foreground">Email Alert Testing</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    Send a test critical alert email to verify your Resend integration
+                  </div>
+                  <div className="mt-5 flex items-center gap-3">
+                    <button
+                      onClick={sendTestAlert}
+                      disabled={testAlertLoading}
+                      className={cn(
+                        "inline-flex items-center gap-2 h-9 px-4 rounded-lg text-[13px] font-semibold transition",
+                        "bg-primary text-white hover:bg-primary/90 disabled:opacity-50"
+                      )}
+                    >
+                      {testAlertLoading ? (
+                        <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      ) : (
+                        <Send className="h-3.5 w-3.5" />
+                      )}
+                      {testAlertLoading ? "Sending..." : "Send test alert"}
+                    </button>
+                    {testAlertResult && (
+                      <div className={cn(
+                        "flex items-center gap-1.5 text-[12px] font-medium",
+                        testAlertResult.success ? "text-green-500" : "text-destructive"
+                      )}>
+                        {testAlertResult.success ? (
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                        ) : (
+                          <XCircle className="h-3.5 w-3.5" />
+                        )}
+                        {testAlertResult.message}
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-3 text-[11px] text-muted-foreground">
+                    This sends a simulated critical alert to your registered email address via Resend.
+                  </div>
                 </div>
-              ))}
-              {(settingItems[active] ?? []).length === 0 && (
-                <div className="p-8 text-center text-sm text-muted-foreground">Nothing to configure here.</div>
               )}
-            </div>
+            </>
           )}
 
           <div className="bg-card border border-border rounded-2xl p-5 shadow-[var(--shadow-soft)]">

@@ -8,6 +8,7 @@ from app.pipeline.preprocessor import extract_features
 from app.pipeline.detector import detect_anomaly
 from app.agent.decision_engine import evaluate_anomaly
 from app.db.supabase_client import get_supabase
+from app.core.config import get_settings
 
 
 async def process_log_pipeline(log: LogEntry, log_id: str):
@@ -53,6 +54,52 @@ async def process_log_pipeline(log: LogEntry, log_id: str):
                 supabase.table("anomalies").insert(result.model_dump()).execute()
             except Exception as e:
                 print(f"Error storing anomaly result: {e}")
+
+        # 6. Send Email Alert for Critical/High severity anomalies
+        if is_anomaly and final_severity.value in ("critical", "high") and action.value in ("block", "flag"):
+            try:
+                _send_anomaly_alert(supabase, log, result)
+            except Exception as e:
+                print(f"Error sending alert email: {e}")
                 
     except Exception as e:
         print(f"Pipeline error for log {log_id}: {e}")
+
+
+def _send_anomaly_alert(supabase, log: LogEntry, result: AnomalyResult):
+    """
+    Look up the user's email and send a critical alert notification via Resend.
+    """
+    settings = get_settings()
+    if not settings.alert_email_enabled or not settings.resend_api_key:
+        return
+
+    # Look up user email from Supabase Auth
+    user_email = None
+    try:
+        if log.tenant_id:
+            user_res = supabase.auth.admin.get_user_by_id(log.tenant_id)
+            if user_res and user_res.user and user_res.user.email:
+                user_email = user_res.user.email
+    except Exception as e:
+        print(f"[Email] Could not look up user email for tenant {log.tenant_id}: {e}")
+
+    if not user_email:
+        print(f"[Email] No email found for tenant {log.tenant_id}, skipping alert.")
+        return
+
+    # Send the alert
+    from app.services.email_service import send_critical_alert_email
+
+    send_critical_alert_email(
+        to_email=user_email,
+        user_id=log.user_id,
+        severity=result.final_severity.value,
+        anomaly_score=result.anomaly_score,
+        action=result.action_recommendation.value,
+        reasoning=result.reasoning,
+        event_type=log.event_type.value,
+        ip_address=log.ip_address,
+        timestamp=log.timestamp.isoformat(),
+    )
+

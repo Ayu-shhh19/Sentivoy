@@ -1,0 +1,29 @@
+# ── Environment variables ──
+.env
+.env.*
+!.env.example
+
+# ── Python / Backend ──
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# ── Node / Frontend ──
+node_modules/
+dist/
+.output/
+.vinxi/
+
+# ── IDE ──
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

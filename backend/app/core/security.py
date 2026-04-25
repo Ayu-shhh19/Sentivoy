@@ -1,5 +1,6 @@
 import os
 import jwt
+import base64
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
@@ -22,23 +23,34 @@ def verify_supabase_token(credentials: HTTPAuthorizationCredentials = Depends(se
 
     token = credentials.credentials
     try:
-        # Supabase uses HS256 for its JWTs
+        # Decode the secret if it's base64 encoded
+        try:
+            secret = SUPABASE_JWT_SECRET
+            if "==" in secret or secret.endswith("="):
+                 secret = base64.b64decode(SUPABASE_JWT_SECRET)
+        except:
+            secret = SUPABASE_JWT_SECRET
+
         payload = jwt.decode(
             token,
-            SUPABASE_JWT_SECRET,
+            secret,
             algorithms=["HS256"],
             audience="authenticated"
         )
         return payload
-    except jwt.ExpiredSignatureError:
+    except Exception as local_err:
+        # Fallback to Supabase Auth API if local verification fails
+        try:
+            from app.db.supabase_client import get_supabase
+            supabase = get_supabase()
+            res = supabase.auth.get_user(token)
+            if res and res.user:
+                return {"sub": res.user.id, "email": res.user.email}
+        except Exception as api_err:
+            pass
+            
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token has expired",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    except jwt.InvalidTokenError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid token: {str(e)}",
+            detail=f"Invalid token. Local: {str(local_err)}",
             headers={"WWW-Authenticate": "Bearer"},
         )

@@ -13,6 +13,7 @@ import { AlertsTable } from "@/components/sentinel/AlertsTable";
 import { AlertDrawer } from "@/components/sentinel/AlertDrawer";
 import { useAuth } from "@/lib/authContext";
 import type { AlertRow } from "@/lib/types";
+import { API_URL } from "@/lib/api";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
 export const Route = createFileRoute("/dashboard")({
@@ -98,7 +99,7 @@ function DashboardPage() {
                   if (!session?.access_token) return;
                   setExporting(true);
                   try {
-                    const res = await fetch("http://localhost:8000/api/reports/pdf", {
+                    const res = await fetch(`${API_URL}/api/reports/pdf`, {
                       headers: { Authorization: `Bearer ${session.access_token}` },
                     });
                     if (!res.ok) throw new Error("Failed to generate report");

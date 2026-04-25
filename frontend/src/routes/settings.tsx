@@ -5,6 +5,7 @@ import { PageShell } from "@/components/sentinel/PageShell";
 import { ApiKeyPanel } from "@/components/sentinel/ApiKeyPanel";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/authContext";
+import { API_URL } from "@/lib/api";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -65,7 +66,7 @@ function SettingsPage() {
     setTestAlertLoading(true);
     setTestAlertResult(null);
     try {
-      const res = await fetch("http://localhost:8000/api/notifications/test", {
+      const res = await fetch(`${API_URL}/api/notifications/test`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${session.access_token}`,

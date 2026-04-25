@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/authContext";
+import { API_URL } from "@/lib/api";
 import type { AlertRow } from "@/lib/types";
 
 export interface DashboardData {
@@ -31,7 +32,7 @@ export function useDashboardData() {
     queryFn: async () => {
       if (!session?.access_token) throw new Error("No session");
       
-      const res = await fetch("http://localhost:8000/api/dashboard/summary", {
+      const res = await fetch(`${API_URL}/api/dashboard/summary`, {
         headers: {
           Authorization: `Bearer ${session.access_token}`
         }

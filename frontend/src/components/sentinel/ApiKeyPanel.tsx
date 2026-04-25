@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/authContext";
+import { API_URL } from "@/lib/api";
 
 interface ApiKey {
   id: string;
@@ -20,7 +21,7 @@ export function ApiKeyPanel() {
   const fetchKeys = async () => {
     if (!session?.access_token) return;
     try {
-      const res = await fetch("http://localhost:8000/api/keys", {
+      const res = await fetch(`${API_URL}/api/keys`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (res.ok) {
@@ -44,7 +45,7 @@ export function ApiKeyPanel() {
     
     setIsCreating(true);
     try {
-      const res = await fetch("http://localhost:8000/api/keys", {
+      const res = await fetch(`${API_URL}/api/keys`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -68,7 +69,7 @@ export function ApiKeyPanel() {
   const handleRevoke = async (id: string) => {
     if (!session?.access_token || !confirm("Are you sure you want to revoke this key?")) return;
     try {
-      const res = await fetch(`http://localhost:8000/api/keys/${id}`, {
+      const res = await fetch(`${API_URL}/api/keys/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${session.access_token}` },
       });

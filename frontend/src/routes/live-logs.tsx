@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/sentinel/PageShell";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/authContext";
+import { API_URL } from "@/lib/api";
 
 export const Route = createFileRoute("/live-logs")({
   head: () => ({
@@ -51,7 +52,7 @@ function LiveLogsPage() {
     queryKey: ["liveLogs"],
     queryFn: async () => {
       if (!session?.access_token) throw new Error("No session");
-      const res = await fetch("http://localhost:8000/api/live-logs?limit=50", {
+      const res = await fetch(`${API_URL}/api/live-logs?limit=50`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (!res.ok) throw new Error("Failed to fetch logs");

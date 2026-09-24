@@ -1,4 +1,7 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   Activity,
@@ -24,19 +27,6 @@ import { useAuth } from "@/lib/authContext";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { API_URL } from "@/lib/api";
 import type { AlertRow, Severity } from "@/lib/types";
-
-export const Route = createFileRoute("/dashboard")({
-  head: () => ({
-    meta: [
-      { title: "Dashboard — Sentivoy" },
-      {
-        name: "description",
-        content: "Monitor security events, anomalies, and active threats in Sentivoy.",
-      },
-    ],
-  }),
-  component: DashboardPage,
-});
 
 const number = new Intl.NumberFormat("en-US");
 const flowColors = { other: "#62b9ef", critical: "#417fd5" };
@@ -407,7 +397,7 @@ function RecentAlerts({
             </select>
           </label>
           <Link
-            to="/alerts"
+            href="/alerts"
             className="flex items-center gap-1 text-[10px] font-medium text-[#417fd5] hover:underline"
           >
             See all
@@ -469,9 +459,9 @@ function RecentAlerts({
   );
 }
 
-function DashboardPage() {
+export default function DashboardPage() {
   const { user, session, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const { data, isLoading, error, refetch } = useDashboardData();
   const [selected, setSelected] = useState<AlertRow | null>(null);
   const search = useUIStore((state) => state.alertSearch);
@@ -480,8 +470,8 @@ function DashboardPage() {
   const [emailing, setEmailing] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && !user) navigate({ to: "/auth" });
-  }, [authLoading, user, navigate]);
+    if (!authLoading && !user) router.push("/auth");
+  }, [authLoading, user, router]);
 
   const exportReport = async () => {
     if (!session?.access_token) return;

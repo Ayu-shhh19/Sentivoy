@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useLocation } from "@tanstack/react-router";
+import { usePathname } from "next/navigation";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { DashboardHeader } from "./DashboardHeader";
 import { usePageReveal } from "@/hooks/usePageReveal";
@@ -13,7 +13,7 @@ export function AppFrame({
   search?: string;
   onSearchChange?: (value: string) => void;
 }) {
-  const pathname = useLocation({ select: (location) => location.pathname });
+  const pathname = usePathname();
   const ref = usePageReveal<HTMLElement>(pathname, ":scope > *");
   return (
     <div className="workspace-shell dashboard-reference">

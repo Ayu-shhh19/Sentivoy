@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+"use client";
+
 import { useEffect, useRef, useState } from "react";
 import { Pause, Play, Search, Trash2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -7,19 +8,6 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/authContext";
 import { API_URL } from "@/lib/api";
 import { useUIStore } from "@/lib/uiStore";
-
-export const Route = createFileRoute("/live-logs")({
-  head: () => ({
-    meta: [
-      { title: "Live Logs — Sentivoy" },
-      {
-        name: "description",
-        content: "Stream raw log events in real time with intelligent filters.",
-      },
-    ],
-  }),
-  component: LiveLogsPage,
-});
 
 type Level = "info" | "warn" | "error" | "critical";
 interface LogLine {
@@ -44,7 +32,7 @@ const levelDot: Record<Level, string> = {
   critical: "bg-critical",
 };
 
-function LiveLogsPage() {
+export default function LiveLogsPage() {
   const { session } = useAuth();
   const paused = useUIStore((state) => state.logPaused);
   const togglePaused = useUIStore((state) => state.toggleLogPaused);

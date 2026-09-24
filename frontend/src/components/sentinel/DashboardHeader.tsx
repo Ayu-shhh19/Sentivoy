@@ -1,5 +1,5 @@
 import { Bell, ChevronDown, LogOut, Menu, Search, Settings, ArrowUpRight } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import Link from "next/link";
 import { useState } from "react";
 import { useSidebar } from "@/lib/sidebarContext";
 import { useAuth } from "@/lib/authContext";
@@ -87,7 +87,7 @@ export function DashboardHeader({
               filtered.map((page) => (
                 <Link
                   key={page.to}
-                  to={page.to}
+                  href={page.to}
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => {
                     setNavigationSearch("");
@@ -109,7 +109,7 @@ export function DashboardHeader({
           <i />
           Security workspace
         </span>
-        <Link to="/alerts" className="icon-button" aria-label="View alerts">
+        <Link href="/alerts" className="icon-button" aria-label="View alerts">
           <Bell size={17} />
         </Link>
         <DropdownMenu>
@@ -134,7 +134,7 @@ export function DashboardHeader({
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link to="/settings">
+              <Link href="/settings">
                 <Settings size={14} />
                 Workspace settings
               </Link>

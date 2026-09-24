@@ -1,17 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+"use client";
+
 import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { PageShell } from "@/components/sentinel/PageShell";
 import { cn } from "@/lib/utils";
-
-export const Route = createFileRoute("/ueba")({
-  head: () => ({
-    meta: [
-      { title: "User Behavior (UEBA) — Sentivoy" },
-      { name: "description", content: "User & Entity Behavior Analytics powered by ML baselines." },
-    ],
-  }),
-  component: UebaPage,
-});
 
 const statusStyle = {
   anomalous: "bg-critical/10 text-critical",
@@ -21,7 +12,7 @@ const statusStyle = {
 
 import { useDashboardData } from "@/hooks/useDashboardData";
 
-function UebaPage() {
+export default function UebaPage() {
   const { data: dashboardData } = useDashboardData();
 
   // Deduplicate users from alerts and mock risk scores

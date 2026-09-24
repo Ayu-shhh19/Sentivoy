@@ -1,5 +1,7 @@
+"use client";
+
 import { useCallback, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import Link from "next/link";
 import {
   Activity,
   ArrowRight,
@@ -20,20 +22,6 @@ import { SentivoyLogo } from "@/components/brand/SentivoyLogo";
 import { EarthGlobe } from "@/components/brand/EarthGlobe";
 import { LandingIntro } from "@/components/brand/LandingIntro";
 import { usePageReveal } from "@/hooks/usePageReveal";
-
-export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Sentivoy — A world of signals. One clear view." },
-      {
-        name: "description",
-        content:
-          "Explore your security landscape with Sentivoy. Logs, anomaly detection, and investigations in one connected workspace.",
-      },
-    ],
-  }),
-  component: LandingPage,
-});
 
 const features = [
   {
@@ -143,7 +131,7 @@ function PhonePreview({ active = 0 }: { active?: number }) {
   );
 }
 
-function LandingPage() {
+export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [active, setActive] = useState(0);
   const [introComplete, setIntroComplete] = useState(false);
@@ -157,7 +145,7 @@ function LandingPage() {
           Skip to content
         </a>
         <header className="blue-nav">
-          <Link to="/" aria-label="Sentivoy home">
+          <Link href="/" aria-label="Sentivoy home">
             <SentivoyLogo />
           </Link>
           <nav aria-label="Website">
@@ -166,7 +154,7 @@ function LandingPage() {
             <a href="#workspace">Workspace</a>
             <a href="#questions">Questions</a>
           </nav>
-          <Link to="/auth" className="blue-button nav-signin">
+          <Link href="/auth" className="blue-button nav-signin">
             Sign in <ArrowUpRight size={14} />
           </Link>
           <button
@@ -189,7 +177,7 @@ function LandingPage() {
               <a href="#workspace" onClick={() => setMenuOpen(false)}>
                 Workspace
               </a>
-              <Link to="/auth">Sign in / Create account</Link>
+              <Link href="/auth">Sign in / Create account</Link>
             </nav>
           )}
         </header>
@@ -209,7 +197,7 @@ function LandingPage() {
                 into one connected workspace.
               </p>
               <div className="blue-hero-actions">
-                <Link to="/auth" className="blue-button">
+                <Link href="/auth" className="blue-button">
                   Open your workspace <ArrowRight size={17} />
                 </Link>
                 <a href="#platform" className="blue-text-link">
@@ -311,7 +299,7 @@ function LandingPage() {
                 },
               ].map(({ title, description, label, icon: Icon, className, code, main, sub }) => (
                 <article data-reveal="scale" key={title}>
-                  <Link to="/auth" className={`blue-role-art ${className}`} aria-label={label}>
+                  <Link href="/auth" className={`blue-role-art ${className}`} aria-label={label}>
                     <span className="role-pill">
                       {label}
                       <ArrowUpRight size={12} />
@@ -369,7 +357,7 @@ function LandingPage() {
                       </button>
                       <div id={`feature-panel-${i}`} hidden={active !== i}>
                         <p>{description}</p>
-                        <Link to="/auth">
+                        <Link href="/auth">
                           Explore Sentivoy <ArrowRight size={13} />
                         </Link>
                       </div>
@@ -506,7 +494,7 @@ function LandingPage() {
                     <br />
                     Open Sentivoy and find your perspective.
                   </p>
-                  <Link to="/auth" className="blue-button">
+                  <Link href="/auth" className="blue-button">
                     Get started <ArrowUpRight size={17} />
                   </Link>
                   <small>
@@ -543,14 +531,14 @@ function LandingPage() {
         </main>
         <footer className="blue-footer blue-container">
           <div>
-            <Link to="/" aria-label="Sentivoy home">
+            <Link href="/" aria-label="Sentivoy home">
               <SentivoyLogo />
             </Link>
             <nav aria-label="Footer">
               <a href="#platform">Features</a>
               <a href="#solutions">Solutions</a>
               <a href="#workspace">Workspace</a>
-              <Link to="/auth">
+              <Link href="/auth">
                 Sign in <ArrowUpRight size={13} />
               </Link>
             </nav>

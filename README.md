@@ -112,7 +112,7 @@ npm install
 npm run dev
 ```
 
-Vite serves the app on the port it prints, usually `http://localhost:5173`. Open `/auth` to sign up or sign in, then use `/dashboard`.
+Next.js serves the app at `http://127.0.0.1:3000`. Open `/auth` to sign up or sign in, then use `/dashboard`.
 
 Push sample traffic while the API is running:
 

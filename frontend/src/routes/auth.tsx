@@ -1,28 +1,20 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { AuthPanel } from "@/components/auth/AuthPanel";
 import { useAuth } from "@/lib/authContext";
 
-export const Route = createFileRoute("/auth")({
-  head: () => ({
-    meta: [
-      { title: "Authentication — Sentivoy" },
-      { name: "description", content: "Login or Sign Up to Sentivoy." },
-    ],
-  }),
-  component: AuthPage,
-});
-
-function AuthPage() {
+export default function AuthPage() {
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   // If the user is already logged in, send them to the dashboard
   useEffect(() => {
     if (!loading && user) {
-      navigate({ to: "/dashboard" });
+      router.push("/dashboard");
     }
-  }, [loading, user, navigate]);
+  }, [loading, user, router]);
 
   return <AuthPanel />;
 }

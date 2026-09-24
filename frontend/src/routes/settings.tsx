@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+"use client";
+
 import { useState } from "react";
 import {
   Bell,
@@ -19,16 +20,6 @@ import { useAuth } from "@/lib/authContext";
 import { API_URL } from "@/lib/api";
 import { useUIStore } from "@/lib/uiStore";
 import { SentivoyLogo } from "@/components/brand/SentivoyLogo";
-
-export const Route = createFileRoute("/settings")({
-  head: () => ({
-    meta: [
-      { title: "Settings — Sentivoy" },
-      { name: "description", content: "Configure detection rules, members, and billing." },
-    ],
-  }),
-  component: SettingsPage,
-});
 
 const sections = [
   { id: "appearance", label: "Appearance", icon: Palette },
@@ -70,7 +61,7 @@ function Toggle({
   );
 }
 
-function SettingsPage() {
+export default function SettingsPage() {
   const { session, user } = useAuth();
   const active = useUIStore((state) => state.settingsSection);
   const setActive = useUIStore((state) => state.setSettingsSection);

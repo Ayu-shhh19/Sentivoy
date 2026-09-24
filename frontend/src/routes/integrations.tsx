@@ -1,20 +1,12 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+"use client";
+
+import Link from "next/link";
 import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useUIStore } from "@/lib/uiStore";
 import { CheckCircle2, Plus } from "lucide-react";
 import { PageShell } from "@/components/sentinel/PageShell";
 import { cn } from "@/lib/utils";
-
-export const Route = createFileRoute("/integrations")({
-  head: () => ({
-    meta: [
-      { title: "Integrations — Sentivoy" },
-      { name: "description", content: "Connect SIEM, cloud, and identity sources." },
-    ],
-  }),
-  component: IntegrationsPage,
-});
 
 const integrations = [
   {
@@ -110,7 +102,7 @@ const integrations = [
   },
 ];
 
-function IntegrationsPage() {
+export default function IntegrationsPage() {
   const connected = integrations.filter((i) => i.connected).length;
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
@@ -216,7 +208,7 @@ function IntegrationsPage() {
           </DialogDescription>
           {selected?.connected && (
             <Link
-              to="/settings"
+              href="/settings"
               onClick={() => setSettingsSection("api")}
               className="ui-button ui-button-primary"
             >

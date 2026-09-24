@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Link } from "@tanstack/react-router";
+import Link from "next/link";
 import {
   Activity,
   ArrowLeft,
@@ -86,7 +86,7 @@ export function AuthPanel() {
   return (
     <div className="auth-page" ref={ref}>
       <aside className="auth-story">
-        <Link to="/" aria-label="Sentivoy home">
+        <Link href="/" aria-label="Sentivoy home">
           <SentivoyLogo inverse />
         </Link>
         <div className="auth-story-copy" data-reveal>
@@ -147,7 +147,7 @@ export function AuthPanel() {
         </div>
       </aside>
       <main className="auth-form-side">
-        <Link to="/" className="auth-back">
+        <Link href="/" className="auth-back">
           <ArrowLeft size={12} />
           Back to website
         </Link>

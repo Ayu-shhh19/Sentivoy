@@ -1,20 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+"use client";
+
 import { Siren, PlayCircle, Clock, Users, CheckCircle2, AlertCircle } from "lucide-react";
 import { PageShell } from "@/components/sentinel/PageShell";
 import { cn } from "@/lib/utils";
-
-export const Route = createFileRoute("/incident-response")({
-  head: () => ({
-    meta: [
-      { title: "Incident Response — Sentivoy" },
-      {
-        name: "description",
-        content: "Coordinate incident response with playbooks and timelines.",
-      },
-    ],
-  }),
-  component: IncidentPage,
-});
 
 const playbooks = [
   { name: "Credential Stuffing Response", steps: 7, runs: 142 },
@@ -37,7 +25,7 @@ const statusStyle = {
 
 import { useDashboardData } from "@/hooks/useDashboardData";
 
-function IncidentPage() {
+export default function IncidentPage() {
   const { data: dashboardData } = useDashboardData();
 
   // Derive simple incidents from the latest alerts

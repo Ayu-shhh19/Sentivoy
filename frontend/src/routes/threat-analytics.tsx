@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+"use client";
+
 import { Activity, Download, Filter, TrendingUp, Shield, Zap, Target } from "lucide-react";
 import {
   AreaChart,
@@ -22,19 +23,6 @@ import { PageDataState } from "@/components/sentinel/PageDataState";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/threat-analytics")({
-  head: () => ({
-    meta: [
-      { title: "Threat Analytics — Sentivoy" },
-      {
-        name: "description",
-        content: "Deep-dive analytics on detected threats and anomaly patterns.",
-      },
-    ],
-  }),
-  component: ThreatAnalyticsPage,
-});
-
 const DEFAULT_KILL_CHAIN = [
   { stage: "Recon", value: 0 },
   { stage: "Weaponize", value: 0 },
@@ -45,7 +33,7 @@ const DEFAULT_KILL_CHAIN = [
   { stage: "Action", value: 0 },
 ];
 
-function ThreatAnalyticsPage() {
+export default function ThreatAnalyticsPage() {
   const { data: dashboardData, isLoading, error, refetch } = useDashboardData();
 
   if (isLoading || !dashboardData || error) {

@@ -1,12 +1,12 @@
 import { useEffect } from "react";
-import { useLocation } from "@tanstack/react-router";
+import { usePathname } from "next/navigation";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import { useUIStore } from "@/lib/uiStore";
 
 export function UIRuntime() {
-  const pathname = useLocation({ select: (location) => location.pathname });
+  const pathname = usePathname();
   const smoothScroll = useUIStore((state) => state.smoothScroll);
   const animations = useUIStore((state) => state.animations);
   useEffect(() => {

@@ -14,7 +14,8 @@ import {
   Siren,
   UserCog,
 } from "lucide-react";
-import { Link, useLocation } from "@tanstack/react-router";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "@/lib/sidebarContext";
 import { useAuth } from "@/lib/authContext";
@@ -48,7 +49,7 @@ const groups = [
 ];
 
 function SidebarBody({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) {
-  const { pathname } = useLocation();
+  const pathname = usePathname();
   const { signOut } = useAuth();
   return (
     <div className="flex h-full flex-col bg-white">
@@ -59,7 +60,7 @@ function SidebarBody({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
         )}
       >
         <Link
-          to="/dashboard"
+          href="/dashboard"
           onClick={onNavigate}
           className="flex items-center gap-2.5 text-[#393197]"
         >
@@ -83,7 +84,7 @@ function SidebarBody({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
               return (
                 <Link
                   key={item.to}
-                  to={item.to as "/"}
+                  href={item.to as "/"}
                   onClick={onNavigate}
                   aria-current={active ? "page" : undefined}
                   title={collapsed ? item.label : undefined}
@@ -115,7 +116,7 @@ function SidebarBody({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
             </div>
           )}
           <Link
-            to="/settings"
+            href="/settings"
             onClick={onNavigate}
             title={collapsed ? "Settings" : undefined}
             className={cn(
@@ -160,7 +161,7 @@ function SidebarBody({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
 }
 
 export function DashboardSidebar() {
-  const { pathname } = useLocation();
+  const pathname = usePathname();
   const { collapsed, toggleCollapsed, mobileOpen, setMobileOpen } = useSidebar();
   useEffect(() => setMobileOpen(false), [pathname, setMobileOpen]);
   return (

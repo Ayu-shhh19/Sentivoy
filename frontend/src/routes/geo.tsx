@@ -1,19 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+"use client";
+
 import { PageShell } from "@/components/sentinel/PageShell";
 import { PageDataState } from "@/components/sentinel/PageDataState";
 import { GeoThreatMap } from "@/components/sentinel/GeoThreatMap";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { cn } from "@/lib/utils";
-
-export const Route = createFileRoute("/geo")({
-  head: () => ({
-    meta: [
-      { title: "Geo Intelligence — Sentivoy" },
-      { name: "description", content: "Geographic threat intelligence and IP reputation feeds." },
-    ],
-  }),
-  component: GeoPage,
-});
 
 const repStyle = {
   critical: "bg-critical/10 text-critical",
@@ -22,7 +13,7 @@ const repStyle = {
   low: "bg-muted text-muted-foreground",
 };
 
-function GeoPage() {
+export default function GeoPage() {
   const { data: dashboardData, isLoading, error, refetch } = useDashboardData();
 
   if (isLoading || !dashboardData || error) {

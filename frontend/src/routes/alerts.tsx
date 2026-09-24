@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+"use client";
+
 import { useState } from "react";
 import { useUIStore } from "@/lib/uiStore";
 import { downloadCsv } from "@/lib/downloadCsv";
@@ -12,17 +13,7 @@ import { type AlertRow, type AlertStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
-export const Route = createFileRoute("/alerts")({
-  head: () => ({
-    meta: [
-      { title: "Alerts — Sentivoy" },
-      { name: "description", content: "Triage, assign, and resolve security alerts." },
-    ],
-  }),
-  component: AlertsPage,
-});
-
-function AlertsPage() {
+export default function AlertsPage() {
   const { data: dashboardData, isLoading, error, refetch } = useDashboardData();
   const tab = useUIStore((state) => state.alertStatus);
   const setTab = useUIStore((state) => state.setAlertStatus);

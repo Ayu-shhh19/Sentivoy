@@ -148,12 +148,23 @@ python tests/test_pipeline.py
 
 Runs feature extraction against the configured database, then inference and the decision engine.
 
+## Docker
+
+Build from this directory. The image includes the saved TensorFlow weights and does not copy `.env`. Pass the same variables as `.env.example` at runtime. Set `FRONTEND_URL` to the deployed dashboard origin. Hosts that inject `PORT` are honored; otherwise the process listens on 8000.
+
+```bash
+docker build -t sentivoy-api .
+docker run --rm -p 8000:8000 --env-file .env sentivoy-api
+```
+
 ## Layout
 
 ```
 backend/
 ├── .env.example
 ├── .gitignore
+├── .dockerignore
+├── Dockerfile
 ├── requirements.txt
 ├── supabase/schema.sql
 ├── app/

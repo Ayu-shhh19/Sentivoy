@@ -3,12 +3,6 @@
   "private": true,
   "sideEffects": false,
   "type": "module",
-  "overrides": {
-    "react-simple-maps": {
-      "react": "$react",
-      "react-dom": "$react-dom"
-    }
-  },
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
@@ -72,7 +66,6 @@
     "react-hook-form": "^7.71.2",
     "react-is": "^19.3.0",
     "react-resizable-panels": "^4.6.5",
-    "react-simple-maps": "^3.0.0",
     "recharts": "^3.8.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
@@ -91,7 +84,6 @@
     "@types/node": "^22.16.5",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
-    "@types/react-simple-maps": "^3.0.6",
     "@vitejs/plugin-react": "^5.0.4",
     "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.1",

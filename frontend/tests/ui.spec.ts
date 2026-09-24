@@ -251,10 +251,18 @@ test("mobile screens fit and navigation opens", async ({ page }, info) => {
 test("GSAP reveals remain visible when motion is enabled", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/");
+  await expect(page.locator(".landing-intro")).toBeVisible();
+  await expect(page.locator(".landing-content")).toHaveAttribute("inert", "");
+  await expect(page.locator(".landing-intro")).toHaveCount(0);
   await expect(page.locator("html")).toHaveAttribute("data-motion", /.+/);
   const heading = page.getByRole("heading", { level: 1 });
   await expect(heading).toBeVisible();
   await expect(heading).toHaveCSS("opacity", "1");
+  const firstRole = page.locator("#solutions .blue-role-grid article").first();
+  await expect(firstRole).toHaveCSS("visibility", "hidden");
+  await firstRole.evaluate((element) => element.scrollIntoView({ block: "center" }));
+  await expect(firstRole).toBeVisible();
+  await expect(firstRole).toHaveCSS("opacity", "1");
   await page.getByRole("link", { name: "Explore the platform" }).click();
   await expect(page.locator("#platform h2")).toBeInViewport();
   await expect(page.locator("#platform h2")).toBeVisible();

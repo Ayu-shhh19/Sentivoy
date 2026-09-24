@@ -5,6 +5,87 @@
   overflow: clip;
   font-family: "Segoe UI", sans-serif;
 }
+.landing-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 46%, #193f71 0%, #0d2342 43%, #08182e 100%);
+  color: #fff;
+}
+.landing-intro-halo {
+  position: absolute;
+  width: min(560px, 90vw);
+  aspect-ratio: 1;
+  border: 1px solid #7eb5ee1f;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 85px #5a98db08,
+    0 0 0 170px #5a98db05;
+  pointer-events: none;
+}
+.landing-intro-center {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(360px, calc(100% - 64px));
+}
+.landing-intro-lockup {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+.landing-intro-symbol {
+  width: 62px;
+  height: 62px;
+  object-fit: contain;
+}
+.landing-intro-name {
+  font-size: clamp(29px, 5vw, 42px);
+  font-weight: 600;
+  letter-spacing: -0.06em;
+}
+.landing-intro-name span {
+  color: #78b8ff;
+}
+.landing-intro-caption {
+  margin-top: 20px;
+  color: #9eb8d8;
+  font-size: 11px;
+  letter-spacing: 0.025em;
+}
+.landing-intro-track {
+  width: 180px;
+  height: 2px;
+  margin-top: 30px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #80addb30;
+}
+.landing-intro-progress {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: left;
+  background: #7eb8ff;
+  box-shadow: 0 0 12px #7eb8ff;
+}
+.landing-intro-index {
+  position: absolute;
+  right: 5%;
+  bottom: 6%;
+  color: #6b8aaf;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+}
+.landing-intro-index span {
+  margin-left: 9px;
+  color: #8fc7ff;
+}
 .blue-container {
   width: min(1160px, calc(100% - 96px));
   margin-inline: auto;

@@ -7,7 +7,10 @@ export const Route = createFileRoute("/incident-response")({
   head: () => ({
     meta: [
       { title: "Incident Response — Sentivoy" },
-      { name: "description", content: "Coordinate incident response with playbooks and timelines." },
+      {
+        name: "description",
+        content: "Coordinate incident response with playbooks and timelines.",
+      },
     ],
   }),
   component: IncidentPage,
@@ -36,7 +39,7 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 
 function IncidentPage() {
   const { data: dashboardData } = useDashboardData();
-  
+
   // Derive simple incidents from the latest alerts
   const derivedIncidents = (dashboardData?.alerts || []).slice(0, 5).map((a) => {
     // Map alert properties to incident properties roughly
@@ -48,7 +51,7 @@ function IncidentPage() {
       status: isClosed ? "closed" : "active",
       opened: new Date(a.timestamp).toLocaleString(),
       owner: "Unassigned",
-      progress: isClosed ? 100 : Math.floor(Math.random() * 50) + 10,
+      progress: isClosed ? 100 : 0,
     };
   });
 
@@ -76,11 +79,16 @@ function IncidentPage() {
             success: "bg-success/10 text-success",
           }[s.tone];
           return (
-            <div key={s.label} className="card-hover bg-card border border-border rounded-2xl p-5 shadow-[var(--shadow-soft)]">
+            <div
+              key={s.label}
+              className="card-hover bg-card border border-border rounded-2xl p-5 shadow-[var(--shadow-soft)]"
+            >
               <div className={cn("h-9 w-9 rounded-xl grid place-items-center", tone)}>
                 <Icon className="h-4 w-4" />
               </div>
-              <div className="mt-4 text-[26px] font-semibold tracking-tight text-foreground tabular-nums">{s.value}</div>
+              <div className="mt-4 text-[26px] font-semibold tracking-tight text-foreground tabular-nums">
+                {s.value}
+              </div>
               <div className="text-[12.5px] text-muted-foreground mt-1">{s.label}</div>
             </div>
           );
@@ -88,25 +96,45 @@ function IncidentPage() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <div className="xl:col-span-2 bg-card border border-border rounded-2xl shadow-[var(--shadow-soft)] overflow-hidden">
+        <div className="xl:col-span-2 bg-card border border-border rounded-2xl shadow-[var(--shadow-soft)] overflow-x-auto">
           <div className="p-5 pb-3">
             <div className="text-[15px] font-semibold text-foreground">Open Incidents</div>
             <div className="text-xs text-muted-foreground mt-0.5">Sorted by recency</div>
           </div>
           <div className="divide-y divide-border">
             {derivedIncidents.length === 0 && (
-              <div className="p-8 text-center text-sm text-muted-foreground">No incidents currently match alert constraints.</div>
+              <div className="p-8 text-center text-sm text-muted-foreground">
+                No incidents currently match alert constraints.
+              </div>
             )}
             {derivedIncidents.map((i) => (
-              <div key={i.id} className={cn("p-5 hover:bg-muted/40 transition cursor-pointer", i.severity === "Critical" && "border-l-2 border-l-critical")}>
+              <div
+                key={i.id}
+                className={cn(
+                  "p-5 hover:bg-muted/40 transition cursor-pointer",
+                  i.severity === "Critical" && "border-l-2 border-l-critical",
+                )}
+              >
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono text-[11px] font-semibold text-primary">{i.id}</span>
-                      <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-md", sevStyle[i.severity as keyof typeof sevStyle] || sevStyle.Medium)}>
+                      <span className="font-mono text-[11px] font-semibold text-primary">
+                        {i.id}
+                      </span>
+                      <span
+                        className={cn(
+                          "text-[10px] font-semibold px-2 py-0.5 rounded-md",
+                          sevStyle[i.severity as keyof typeof sevStyle] || sevStyle.Medium,
+                        )}
+                      >
                         {i.severity}
                       </span>
-                      <span className={cn("text-[10px] font-semibold capitalize px-2 py-0.5 rounded-md", statusStyle[i.status as keyof typeof statusStyle])}>
+                      <span
+                        className={cn(
+                          "text-[10px] font-semibold capitalize px-2 py-0.5 rounded-md",
+                          statusStyle[i.status as keyof typeof statusStyle],
+                        )}
+                      >
                         {i.status}
                       </span>
                     </div>
@@ -119,7 +147,9 @@ function IncidentPage() {
                   </div>
                   <div className="text-right shrink-0">
                     <div className="text-[11px] text-muted-foreground">Resolution</div>
-                    <div className="text-[18px] font-semibold tabular-nums text-foreground">{i.progress}%</div>
+                    <div className="text-[18px] font-semibold tabular-nums text-foreground">
+                      {i.progress}%
+                    </div>
                   </div>
                 </div>
                 <div className="mt-3 h-1.5 bg-muted rounded-full overflow-hidden">
@@ -127,7 +157,7 @@ function IncidentPage() {
                     className="h-full rounded-full transition-all"
                     style={{
                       width: `${i.progress}%`,
-                      background: i.progress === 100 ? "oklch(0.68 0.16 152)" : "oklch(0.58 0.19 260)",
+                      background: i.progress === 100 ? "#29b8b4" : "#4782d5",
                     }}
                   />
                 </div>
@@ -136,17 +166,22 @@ function IncidentPage() {
           </div>
         </div>
 
-        <div className="bg-card border border-border rounded-2xl shadow-[var(--shadow-soft)] overflow-hidden">
+        <div className="bg-card border border-border rounded-2xl shadow-[var(--shadow-soft)] overflow-x-auto">
           <div className="p-5 pb-3">
             <div className="text-[15px] font-semibold text-foreground">Automated Playbooks</div>
             <div className="text-xs text-muted-foreground mt-0.5">One-click response</div>
           </div>
           <div className="divide-y divide-border">
             {playbooks.map((p) => (
-              <div key={p.name} className="p-4 flex items-center justify-between gap-3 hover:bg-muted/40 transition">
+              <div
+                key={p.name}
+                className="p-4 flex items-center justify-between gap-3 hover:bg-muted/40 transition"
+              >
                 <div className="min-w-0">
                   <div className="text-[13px] font-medium text-foreground truncate">{p.name}</div>
-                  <div className="text-[10.5px] text-muted-foreground">{p.steps} steps · {p.runs} runs</div>
+                  <div className="text-[10.5px] text-muted-foreground">
+                    {p.steps} steps · {p.runs} runs
+                  </div>
                 </div>
                 <button className="shrink-0 inline-flex items-center gap-1 h-8 px-2.5 rounded-lg bg-primary-soft text-primary text-[11.5px] font-semibold hover:bg-primary hover:text-primary-foreground transition">
                   <PlayCircle className="h-3.5 w-3.5" /> Run

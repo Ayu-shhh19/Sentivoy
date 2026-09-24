@@ -6,7 +6,7 @@ import os
 from app.core.config import get_settings
 from app.core.rate_limiter import setup_rate_limiter
 from app.api import logs, anomalies, keys, dashboard, reports, notifications, live_logs
-from app.ml.autoencoder import load_model
+from app.ml.models import load_models
 
 load_dotenv()
 settings = get_settings()
@@ -43,8 +43,8 @@ app.include_router(live_logs.router)
 @app.on_event("startup")
 async def startup_event():
     """Ensure ML model is loaded into memory on boot."""
-    print("Loading ML model...")
-    _ = load_model()
+    print("Loading ML models...")
+    _ = load_models()
 
 @app.get("/")
 def read_root():

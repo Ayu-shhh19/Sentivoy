@@ -1,11 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Bell, Shield, Users, Key, Database, Sparkles, Send, CheckCircle2, XCircle } from "lucide-react";
+import {
+  Bell,
+  Shield,
+  Users,
+  Key,
+  Database,
+  Sparkles,
+  Send,
+  CheckCircle2,
+  XCircle,
+  Palette,
+} from "lucide-react";
 import { PageShell } from "@/components/sentinel/PageShell";
 import { ApiKeyPanel } from "@/components/sentinel/ApiKeyPanel";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/authContext";
 import { API_URL } from "@/lib/api";
+import { useUIStore } from "@/lib/uiStore";
+import { SentivoyLogo } from "@/components/brand/SentivoyLogo";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -18,6 +31,7 @@ export const Route = createFileRoute("/settings")({
 });
 
 const sections = [
+  { id: "appearance", label: "Appearance", icon: Palette },
   { id: "general", label: "General", icon: Sparkles },
   { id: "detection", label: "Detection rules", icon: Shield },
   { id: "notifications", label: "Notifications", icon: Bell },
@@ -26,9 +40,20 @@ const sections = [
   { id: "data", label: "Data retention", icon: Database },
 ] as const;
 
-function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
+function Toggle({
+  on,
+  onChange,
+  label,
+}: {
+  on: boolean;
+  onChange: (v: boolean) => void;
+  label: string;
+}) {
   return (
     <button
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
       onClick={() => onChange(!on)}
       className={cn(
         "h-5 w-9 rounded-full p-0.5 transition relative",
@@ -46,8 +71,12 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
 }
 
 function SettingsPage() {
-  const { session } = useAuth();
-  const [active, setActive] = useState<(typeof sections)[number]["id"]>("general");
+  const { session, user } = useAuth();
+  const active = useUIStore((state) => state.settingsSection);
+  const setActive = useUIStore((state) => state.setSettingsSection);
+  const animations = useUIStore((state) => state.animations);
+  const smoothScroll = useUIStore((state) => state.smoothScroll);
+  const setPreference = useUIStore((state) => state.setPreference);
   const [toggles, setToggles] = useState({
     realtime: true,
     aiTriage: true,
@@ -57,7 +86,10 @@ function SettingsPage() {
     mfaRequired: true,
   });
   const [testAlertLoading, setTestAlertLoading] = useState(false);
-  const [testAlertResult, setTestAlertResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [testAlertResult, setTestAlertResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
 
   const update = (k: keyof typeof toggles) => (v: boolean) => setToggles((p) => ({ ...p, [k]: v }));
 
@@ -89,26 +121,55 @@ function SettingsPage() {
     }
   };
 
-  const settingItems: Record<string, { label: string; sub: string; key: keyof typeof toggles }[]> = {
-    general: [
-      { label: "Real-time monitoring", sub: "Stream events from all connected sources.", key: "realtime" },
-      { label: "Sentivoy AI triage", sub: "Let AI auto-classify low-confidence alerts.", key: "aiTriage" },
-      { label: "Weekly executive report", sub: "Email summary every Monday at 8am.", key: "weeklyReport" },
-    ],
-    detection: [
-      { label: "Auto-block hostile IPs", sub: "Push offending IPs to edge firewall.", key: "autoBlock" },
-      { label: "Real-time monitoring", sub: "Stream events from all connected sources.", key: "realtime" },
-    ],
-    notifications: [
-      { label: "Weekly executive report", sub: "Email summary every Monday at 8am.", key: "weeklyReport" },
-    ],
-    members: [
-      { label: "Require MFA for all members", sub: "Enforced on next login.", key: "mfaRequired" },
-      { label: "SSO enabled (Okta)", sub: "Members sign in via SSO.", key: "sso" },
-    ],
-    api: [],
-    data: [],
-  };
+  const settingItems: Record<string, { label: string; sub: string; key: keyof typeof toggles }[]> =
+    {
+      general: [
+        {
+          label: "Real-time monitoring",
+          sub: "Stream events from all connected sources.",
+          key: "realtime",
+        },
+        {
+          label: "Sentivoy AI triage",
+          sub: "Let AI auto-classify low-confidence alerts.",
+          key: "aiTriage",
+        },
+        {
+          label: "Weekly executive report",
+          sub: "Email summary every Monday at 8am.",
+          key: "weeklyReport",
+        },
+      ],
+      detection: [
+        {
+          label: "Auto-block hostile IPs",
+          sub: "Push offending IPs to edge firewall.",
+          key: "autoBlock",
+        },
+        {
+          label: "Real-time monitoring",
+          sub: "Stream events from all connected sources.",
+          key: "realtime",
+        },
+      ],
+      notifications: [
+        {
+          label: "Weekly executive report",
+          sub: "Email summary every Monday at 8am.",
+          key: "weeklyReport",
+        },
+      ],
+      members: [
+        {
+          label: "Require MFA for all members",
+          sub: "Enforced on next login.",
+          key: "mfaRequired",
+        },
+        { label: "SSO enabled (Okta)", sub: "Members sign in via SSO.", key: "sso" },
+      ],
+      api: [],
+      data: [],
+    };
 
   return (
     <PageShell title="Settings" description="Workspace configuration.">
@@ -122,7 +183,9 @@ function SettingsPage() {
                 onClick={() => setActive(s.id)}
                 className={cn(
                   "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition",
-                  active === s.id ? "bg-primary-soft text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                  active === s.id
+                    ? "bg-primary-soft text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted",
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -133,19 +196,59 @@ function SettingsPage() {
         </nav>
 
         <div className="space-y-4">
-          {active === "api" ? (
+          {active === "appearance" ? (
+            <div className="surface">
+              <div className="p-5 border-b border-border">
+                <h2 className="text-sm font-semibold">Make it feel like your workspace</h2>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Saved on this device. Your system's reduced-motion preference is always respected.
+                </p>
+              </div>
+              <div className="p-5 flex items-center justify-between gap-5">
+                <div>
+                  <div className="text-[13px] font-medium">Interface animations</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Gentle reveals and transitions throughout Sentivoy.
+                  </p>
+                </div>
+                <Toggle
+                  label="Interface animations"
+                  on={animations}
+                  onChange={(value) => setPreference("animations", value)}
+                />
+              </div>
+              <div className="p-5 border-t border-border flex items-center justify-between gap-5">
+                <div>
+                  <div className="text-[13px] font-medium">Smooth website scrolling</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Fluid scrolling on the public website.
+                  </p>
+                </div>
+                <Toggle
+                  label="Smooth website scrolling"
+                  on={smoothScroll}
+                  onChange={(value) => setPreference("smoothScroll", value)}
+                />
+              </div>
+            </div>
+          ) : active === "api" ? (
             <ApiKeyPanel />
           ) : active === "data" ? (
             <div className="bg-card border border-border rounded-2xl p-5 shadow-[var(--shadow-soft)]">
               <div className="text-[15px] font-semibold text-foreground">Data Retention</div>
-              <div className="text-xs text-muted-foreground mt-0.5">How long Sentivoy keeps your logs</div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                How long Sentivoy keeps your logs
+              </div>
               <div className="mt-5 space-y-4">
                 {[
                   { label: "Raw logs", value: "30 days" },
                   { label: "Anomaly events", value: "180 days" },
                   { label: "Incidents & post-mortems", value: "Forever" },
                 ].map((r) => (
-                  <div key={r.label} className="flex items-center justify-between border-b border-border pb-3 last:border-0">
+                  <div
+                    key={r.label}
+                    className="flex items-center justify-between border-b border-border pb-3 last:border-0"
+                  >
                     <div>
                       <div className="text-[13.5px] font-medium text-foreground">{r.label}</div>
                     </div>
@@ -168,18 +271,22 @@ function SettingsPage() {
                       <div className="text-[13.5px] font-medium text-foreground">{item.label}</div>
                       <div className="text-[11.5px] text-muted-foreground mt-0.5">{item.sub}</div>
                     </div>
-                    <Toggle on={toggles[item.key]} onChange={update(item.key)} />
+                    <Toggle label={item.label} on={toggles[item.key]} onChange={update(item.key)} />
                   </div>
                 ))}
                 {(settingItems[active] ?? []).length === 0 && (
-                  <div className="p-8 text-center text-sm text-muted-foreground">Nothing to configure here.</div>
+                  <div className="p-8 text-center text-sm text-muted-foreground">
+                    Nothing to configure here.
+                  </div>
                 )}
               </div>
 
               {/* Email Alert Test Section — only on notifications tab */}
               {active === "notifications" && (
                 <div className="bg-card border border-border rounded-2xl p-5 shadow-[var(--shadow-soft)]">
-                  <div className="text-[15px] font-semibold text-foreground">Email Alert Testing</div>
+                  <div className="text-[15px] font-semibold text-foreground">
+                    Email Alert Testing
+                  </div>
                   <div className="text-xs text-muted-foreground mt-0.5">
                     Send a test critical alert email to verify your Resend integration
                   </div>
@@ -189,7 +296,7 @@ function SettingsPage() {
                       disabled={testAlertLoading}
                       className={cn(
                         "inline-flex items-center gap-2 h-9 px-4 rounded-lg text-[13px] font-semibold transition",
-                        "bg-primary text-white hover:bg-primary/90 disabled:opacity-50"
+                        "bg-primary text-white hover:bg-primary/90 disabled:opacity-50",
                       )}
                     >
                       {testAlertLoading ? (
@@ -200,10 +307,12 @@ function SettingsPage() {
                       {testAlertLoading ? "Sending..." : "Send test alert"}
                     </button>
                     {testAlertResult && (
-                      <div className={cn(
-                        "flex items-center gap-1.5 text-[12px] font-medium",
-                        testAlertResult.success ? "text-green-500" : "text-destructive"
-                      )}>
+                      <div
+                        className={cn(
+                          "flex items-center gap-1.5 text-[12px] font-medium",
+                          testAlertResult.success ? "text-green-500" : "text-destructive",
+                        )}
+                      >
                         {testAlertResult.success ? (
                           <CheckCircle2 className="h-3.5 w-3.5" />
                         ) : (
@@ -214,7 +323,8 @@ function SettingsPage() {
                     )}
                   </div>
                   <div className="mt-3 text-[11px] text-muted-foreground">
-                    This sends a simulated critical alert to your registered email address via Resend.
+                    This sends a simulated critical alert to your registered email address via
+                    Resend.
                   </div>
                 </div>
               )}
@@ -222,22 +332,13 @@ function SettingsPage() {
           )}
 
           <div className="bg-card border border-border rounded-2xl p-5 shadow-[var(--shadow-soft)]">
-            <div className="text-[15px] font-semibold text-foreground">Workspace</div>
-            <div className="text-xs text-muted-foreground mt-0.5">Acme Corp · Plan: Growth</div>
-            <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-3 text-[12.5px]">
-              <div>
-                <div className="text-muted-foreground">Logs ingested</div>
-                <div className="text-[15px] font-semibold text-foreground tabular-nums">38.4M / 50M</div>
-              </div>
-              <div>
-                <div className="text-muted-foreground">Members</div>
-                <div className="text-[15px] font-semibold text-foreground tabular-nums">12 / 25</div>
-              </div>
-              <div>
-                <div className="text-muted-foreground">Data sources</div>
-                <div className="text-[15px] font-semibold text-foreground tabular-nums">6 / 20</div>
-              </div>
-            </div>
+            <SentivoyLogo />
+            <p className="text-xs text-muted-foreground mt-3">
+              {user?.email || "Your personal workspace"}
+            </p>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Security signals, investigations, and connected sources in one place.
+            </p>
           </div>
         </div>
       </div>

@@ -1,0 +1,11 @@
+{
+  "reconstruction_threshold": 0.0016476860037073493,
+  "attack_confidence": 0.6,
+  "classes": [
+    "normal",
+    "brute_force",
+    "impossible_travel",
+    "api_abuse",
+    "account_takeover"
+  ]
+}

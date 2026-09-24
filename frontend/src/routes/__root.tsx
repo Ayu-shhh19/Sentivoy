@@ -1,6 +1,8 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { SidebarProvider } from "@/lib/sidebarContext";
+import { MotionConfig } from "framer-motion";
+import { UIRuntime } from "@/components/motion/UIRuntime";
+import { WorkspaceGate } from "@/components/auth/WorkspaceGate";
 import { AuthProvider } from "@/lib/authContext";
 
 import appCss from "../styles.css?url";
@@ -35,10 +37,18 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Sentivoy" },
-      { name: "description", content: "AI-Powered Cybersecurity Command Center — Detect, Predict & Respond to Threats in Real Time" },
+      {
+        name: "description",
+        content:
+          "AI-Powered Cybersecurity Command Center — Detect, Predict & Respond to Threats in Real Time",
+      },
       { name: "author", content: "Sentivoy" },
       { property: "og:title", content: "Sentivoy" },
-      { property: "og:description", content: "AI-Powered Cybersecurity Command Center — Detect, Predict & Respond to Threats in Real Time" },
+      {
+        property: "og:description",
+        content:
+          "AI-Powered Cybersecurity Command Center — Detect, Predict & Respond to Threats in Real Time",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Sentivoy" },
@@ -78,9 +88,12 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <SidebarProvider>
-          <Outlet />
-        </SidebarProvider>
+        <MotionConfig reducedMotion="user">
+          <UIRuntime />
+          <WorkspaceGate>
+            <Outlet />
+          </WorkspaceGate>
+        </MotionConfig>
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -2,6 +2,11 @@
 Basic integration test for the ML pipeline.
 """
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 from app.models.schemas import LogEntry
 from app.pipeline.preprocessor import extract_features
 from app.pipeline.detector import detect_anomaly

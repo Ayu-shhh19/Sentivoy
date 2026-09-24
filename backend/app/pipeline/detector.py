@@ -1,59 +1,73 @@
 """
 Anomaly detection module.
-Runs inference on the PyTorch autoencoder.
+Scores a feature vector with the TensorFlow autoencoder and attack classifier.
 """
 
-import torch
-from app.ml.autoencoder import load_model
+import os
+
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
+
+import numpy as np
+
+from app.ml.models import CLASS_NAMES, load_models, reconstruction_errors
 from app.models.schemas import FeatureVector, SeverityLevel
-from app.core.config import get_settings
 
 
-# Load model globally so it's ready for inference
-# In a real app, this might be loaded in a FastAPI lifespan event
-# to avoid loading overhead or errors during module import, 
-# but this is simple and effective.
 try:
-    model = load_model()
-except Exception as e:
-    print(f"Warning: Failed to load ML model: {e}")
-    model = None
+    _autoencoder, _classifier, _calibration = load_models()
+except Exception as exc:
+    print(f"Warning: Failed to load ML models: {exc}")
+    _autoencoder, _classifier, _calibration = None, None, None
+
+
+_CRITICAL_CLASSES = {"brute_force", "impossible_travel", "api_abuse"}
+
+
+def _severity_for_attack(class_name: str, confidence: float) -> SeverityLevel:
+    """Map a predicted attack class to a severity. Stronger confidence escalates."""
+    if class_name in _CRITICAL_CLASSES and confidence >= 0.8:
+        return SeverityLevel.CRITICAL
+    if confidence >= 0.7 or class_name in _CRITICAL_CLASSES:
+        return SeverityLevel.HIGH
+    return SeverityLevel.MEDIUM
+
+
+def _severity_for_error(error: float, threshold: float) -> SeverityLevel:
+    if error < threshold * 1.5:
+        return SeverityLevel.LOW
+    if error < threshold * 2.0:
+        return SeverityLevel.MEDIUM
+    if error < threshold * 3.0:
+        return SeverityLevel.HIGH
+    return SeverityLevel.CRITICAL
 
 
 def detect_anomaly(features: FeatureVector) -> tuple[float, bool, SeverityLevel]:
     """
-    Run inference on the feature vector.
-    Returns: (anomaly_score, is_anomaly, base_severity)
+    Run both models.
+    Returns (anomaly_score, is_anomaly, base_severity).
+
+    A confident attack class wins over reconstruction error so known attacks
+    are not missed when they sit near the normal error boundary.
     """
-    if not model:
-        # Fallback if model failed to load
+    if _autoencoder is None or _classifier is None or _calibration is None:
         return 0.0, False, SeverityLevel.LOW
-        
-    settings = get_settings()
-    threshold = settings.anomaly_threshold
-    
-    # Prepare tensor
-    feature_list = features.to_list()
-    x = torch.tensor([feature_list], dtype=torch.float32)
-    
-    # Inference
-    model.eval()
-    with torch.no_grad():
-        score_tensor = model.reconstruction_error(x)
-        anomaly_score = score_tensor.item()
-        
-    is_anomaly = anomaly_score > threshold
-    
-    # Basic severity mapping based on how far above threshold
+
+    vector = np.asarray([features.to_list()], dtype=np.float32)
+    error = float(reconstruction_errors(_autoencoder, vector)[0])
+    probabilities = _classifier.predict(vector, verbose=0)[0]
+    class_index = int(np.argmax(probabilities))
+    confidence = float(probabilities[class_index])
+    class_name = CLASS_NAMES[class_index] if class_index < len(CLASS_NAMES) else "normal"
+
+    env_threshold = os.getenv("ANOMALY_THRESHOLD")
+    threshold = float(env_threshold) if env_threshold else float(_calibration["reconstruction_threshold"])
+    attack_confidence = float(_calibration.get("attack_confidence", 0.6))
+
+    if class_name != "normal" and confidence >= attack_confidence:
+        return confidence, True, _severity_for_attack(class_name, confidence)
+
+    is_anomaly = error > threshold
     if not is_anomaly:
-        severity = SeverityLevel.LOW
-    elif anomaly_score < threshold * 1.5:
-        severity = SeverityLevel.LOW
-    elif anomaly_score < threshold * 2.0:
-        severity = SeverityLevel.MEDIUM
-    elif anomaly_score < threshold * 3.0:
-        severity = SeverityLevel.HIGH
-    else:
-        severity = SeverityLevel.CRITICAL
-        
-    return anomaly_score, is_anomaly, severity
+        return error, False, SeverityLevel.LOW
+    return error, True, _severity_for_error(error, threshold)

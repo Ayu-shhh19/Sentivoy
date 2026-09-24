@@ -34,13 +34,9 @@ export function AlertsTable({ alerts, onSelect }: Props) {
       <div className="flex items-center justify-between p-5 pb-3">
         <div>
           <div className="text-[15px] font-semibold text-foreground">Recent Alerts</div>
-          <div className="text-xs text-muted-foreground mt-0.5">Click a row for full event details</div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="text-[12px] font-medium text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted transition">
-            Filter
-          </button>
-          <button className="text-[12px] font-semibold text-primary hover:underline">View all →</button>
+          <div className="text-xs text-muted-foreground mt-0.5">
+            Click a row for full event details
+          </div>
         </div>
       </div>
 
@@ -48,11 +44,21 @@ export function AlertsTable({ alerts, onSelect }: Props) {
         <table className="w-full text-[13px]">
           <thead>
             <tr className="text-left text-muted-foreground border-b border-border">
-              <th className="font-medium px-5 py-2.5 text-[11px] uppercase tracking-wider">Timestamp</th>
-              <th className="font-medium px-3 py-2.5 text-[11px] uppercase tracking-wider">User / IP</th>
-              <th className="font-medium px-3 py-2.5 text-[11px] uppercase tracking-wider">Event</th>
-              <th className="font-medium px-3 py-2.5 text-[11px] uppercase tracking-wider">Severity</th>
-              <th className="font-medium px-3 py-2.5 text-[11px] uppercase tracking-wider">Status</th>
+              <th className="font-medium px-5 py-2.5 text-[11px] uppercase tracking-wider">
+                Timestamp
+              </th>
+              <th className="font-medium px-3 py-2.5 text-[11px] uppercase tracking-wider">
+                User / IP
+              </th>
+              <th className="font-medium px-3 py-2.5 text-[11px] uppercase tracking-wider">
+                Event
+              </th>
+              <th className="font-medium px-3 py-2.5 text-[11px] uppercase tracking-wider">
+                Severity
+              </th>
+              <th className="font-medium px-3 py-2.5 text-[11px] uppercase tracking-wider">
+                Status
+              </th>
               <th className="font-medium px-5 py-2.5 text-[11px] uppercase tracking-wider w-10"></th>
             </tr>
           </thead>
@@ -77,22 +83,38 @@ export function AlertsTable({ alerts, onSelect }: Props) {
                 </td>
                 <td className="px-3 py-3">
                   <div className="text-foreground truncate max-w-[180px]">{a.user}</div>
-                  <div className="text-[10.5px] text-muted-foreground font-mono">{a.ip} · {a.country}</div>
+                  <div className="text-[10.5px] text-muted-foreground font-mono">
+                    {a.ip} · {a.country}
+                  </div>
                 </td>
                 <td className="px-3 py-3 text-foreground">{a.event}</td>
                 <td className="px-3 py-3">
-                  <span className={cn("text-[10.5px] font-semibold px-2 py-0.5 rounded-md", sevStyles[a.severity])}>
+                  <span
+                    className={cn(
+                      "text-[10.5px] font-semibold px-2 py-0.5 rounded-md",
+                      sevStyles[a.severity],
+                    )}
+                  >
                     {a.severity}
                   </span>
                 </td>
                 <td className="px-3 py-3">
-                  <span className={cn("text-[10.5px] font-semibold px-2 py-0.5 rounded-md", statusStyles[a.status])}>
+                  <span
+                    className={cn(
+                      "text-[10.5px] font-semibold px-2 py-0.5 rounded-md",
+                      statusStyles[a.status],
+                    )}
+                  >
                     {a.status}
                   </span>
                 </td>
                 <td className="px-5 py-3 text-right">
                   <button
-                    onClick={(e) => e.stopPropagation()}
+                    aria-label={"View details for " + a.event}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelect(a);
+                    }}
                     className="h-7 w-7 grid place-items-center rounded-md hover:bg-muted text-muted-foreground"
                   >
                     <MoreHorizontal className="h-4 w-4" />

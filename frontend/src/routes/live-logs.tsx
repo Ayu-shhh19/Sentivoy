@@ -6,12 +6,16 @@ import { PageShell } from "@/components/sentinel/PageShell";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/authContext";
 import { API_URL } from "@/lib/api";
+import { useUIStore } from "@/lib/uiStore";
 
 export const Route = createFileRoute("/live-logs")({
   head: () => ({
     meta: [
       { title: "Live Logs — Sentivoy" },
-      { name: "description", content: "Stream raw log events in real time with intelligent filters." },
+      {
+        name: "description",
+        content: "Stream raw log events in real time with intelligent filters.",
+      },
     ],
   }),
   component: LiveLogsPage,
@@ -42,9 +46,12 @@ const levelDot: Record<Level, string> = {
 
 function LiveLogsPage() {
   const { session } = useAuth();
-  const [paused, setPaused] = useState(false);
-  const [filter, setFilter] = useState("");
-  const [levelFilter, setLevelFilter] = useState<Level | "all">("all");
+  const paused = useUIStore((state) => state.logPaused);
+  const togglePaused = useUIStore((state) => state.toggleLogPaused);
+  const filter = useUIStore((state) => state.logSearch);
+  const setFilter = useUIStore((state) => state.setLogSearch);
+  const levelFilter = useUIStore((state) => state.logLevel);
+  const setLevelFilter = useUIStore((state) => state.setLogLevel);
   const [logs, setLogs] = useState<LogLine[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -70,13 +77,13 @@ function LiveLogsPage() {
         const existingIds = new Set(prev.map((l) => l.id));
         const newLogs = fetchedLogs.filter((l) => !existingIds.has(l.id));
         if (newLogs.length === 0) return prev;
-        
+
         // Ensure timestamp is parsed properly for display
-        const displayLogs = newLogs.map(l => ({
+        const displayLogs = newLogs.map((l) => ({
           ...l,
-          ts: l.ts ? new Date(l.ts).toLocaleTimeString() : new Date().toLocaleTimeString()
+          ts: l.ts ? new Date(l.ts).toLocaleTimeString() : new Date().toLocaleTimeString(),
         }));
-        
+
         return [...prev, ...displayLogs].slice(-200);
       });
     }
@@ -90,7 +97,8 @@ function LiveLogsPage() {
 
   const filtered = logs.filter((l) => {
     if (levelFilter !== "all" && l.level !== levelFilter) return false;
-    if (filter && !`${l.source} ${l.msg}`.toLowerCase().includes(filter.toLowerCase())) return false;
+    if (filter && !`${l.source} ${l.msg}`.toLowerCase().includes(filter.toLowerCase()))
+      return false;
     return true;
   });
 
@@ -109,7 +117,7 @@ function LiveLogsPage() {
       actions={
         <>
           <button
-            onClick={() => setPaused((p) => !p)}
+            onClick={togglePaused}
             className={cn(
               "inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border text-[13px] font-medium transition",
               paused
@@ -117,7 +125,15 @@ function LiveLogsPage() {
                 : "border-border bg-card hover:bg-muted",
             )}
           >
-            {paused ? <><Play className="h-3.5 w-3.5" /> Resume</> : <><Pause className="h-3.5 w-3.5" /> Pause</>}
+            {paused ? (
+              <>
+                <Play className="h-3.5 w-3.5" /> Resume
+              </>
+            ) : (
+              <>
+                <Pause className="h-3.5 w-3.5" /> Pause
+              </>
+            )}
           </button>
           <button
             onClick={() => setLogs([])}
@@ -139,17 +155,21 @@ function LiveLogsPage() {
               className="w-full h-9 pl-9 pr-3 rounded-lg bg-muted/60 border border-transparent focus:border-border focus:bg-card text-sm outline-none transition"
             />
           </div>
-          <div className="flex items-center bg-muted/60 rounded-lg p-0.5">
+          <div className="flex flex-wrap items-center bg-muted/60 rounded-lg p-0.5">
             {(["all", "info", "warn", "error", "critical"] as const).map((l) => (
               <button
                 key={l}
                 onClick={() => setLevelFilter(l)}
                 className={cn(
                   "px-2.5 h-7 text-[11px] font-semibold rounded-md capitalize transition flex items-center gap-1.5",
-                  levelFilter === l ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+                  levelFilter === l
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {l !== "all" && <span className={cn("h-1.5 w-1.5 rounded-full", levelDot[l as Level])} />}
+                {l !== "all" && (
+                  <span className={cn("h-1.5 w-1.5 rounded-full", levelDot[l as Level])} />
+                )}
                 {l} <span className="text-muted-foreground/70 tabular-nums">({counts[l]})</span>
               </button>
             ))}
@@ -163,22 +183,27 @@ function LiveLogsPage() {
 
         <div
           ref={scrollRef}
-          className="font-mono text-[12px] bg-[oklch(0.16_0.03_264)] text-[oklch(0.85_0.01_257)] h-[560px] overflow-y-auto scrollbar-thin"
+          data-lenis-prevent
+          className="log-stream font-mono text-[12px] h-[560px] overflow-y-auto scrollbar-thin"
         >
           {filtered.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground text-[13px]">No logs match your filter.</div>
+            <div className="p-8 text-center text-muted-foreground text-[13px]">
+              No logs match your filter.
+            </div>
           ) : (
             filtered.map((l) => (
-              <div
-                key={l.id}
-                className="px-4 py-1.5 flex items-start gap-3 border-b border-white/[0.04] hover:bg-white/[0.03] transition"
-              >
-                <span className="text-[oklch(0.55_0.04_257)] tabular-nums shrink-0">{l.ts}</span>
-                <span className={cn("uppercase text-[10px] font-bold w-16 shrink-0 mt-0.5", levelStyle[l.level])}>
+              <div key={l.id} className="log-row px-4 py-2 flex items-start gap-3 transition">
+                <span className="log-time tabular-nums shrink-0">{l.ts}</span>
+                <span
+                  className={cn(
+                    "uppercase text-[10px] font-bold w-16 shrink-0 mt-0.5",
+                    levelStyle[l.level],
+                  )}
+                >
                   [{l.level}]
                 </span>
-                <span className="text-[oklch(0.7_0.13_152)] shrink-0">{l.source}</span>
-                <span className="text-[oklch(0.85_0.01_257)] break-all">{l.msg}</span>
+                <span className="log-source shrink-0">{l.source}</span>
+                <span className="log-message break-all">{l.msg}</span>
               </div>
             ))
           )}

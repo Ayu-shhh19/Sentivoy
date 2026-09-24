@@ -203,83 +203,30 @@ Key primitives used across the app include: `Sheet`, `Sidebar`, `Button`, `Card`
 
 ## Design System
 
-The design system is defined in `src/styles.css` using **CSS custom properties** (OKLCH color space) with full **light and dark mode** support.
+The shared blue-and-white theme lives in `src/ui-theme.css`; `src/landing.css` contains the rounded navy marketing layout. `AppFrame` provides the same sidebar, header, spacing, and responsive navigation across all workspace routes. `SentivoyLogo` uses the local brand asset in `public/sentivoy-logo.png`.
 
-### Color Palette
-
-| Token | Light Mode | Purpose |
-|---|---|---|
-| `--primary` | `oklch(0.58 0.19 260)` | Security blue accent — buttons, links, active states |
-| `--primary-soft` | `oklch(0.96 0.03 260)` | Subtle blue background for badges, highlights |
-| `--destructive` / `--critical` | `oklch(0.62 0.22 27)` | Red — critical alerts, security threats |
-| `--success` | `oklch(0.68 0.16 152)` | Green — resolved, healthy, positive indicators |
-| `--warning` | `oklch(0.78 0.15 78)` | Amber — elevated risk, watch-list items |
-| `--background` | `oklch(0.978 0.003 247)` | Off-white app background |
-| `--card` | `oklch(1 0 0)` | Pure white card surfaces |
-| `--border` | `oklch(0.93 0.01 255)` | Subtle gray borders |
-
-### Typography & Shape
-
-- Font features: `cv02`, `cv03`, `cv04`, `cv11` (OpenType)
-- Anti-aliased rendering (`-webkit-font-smoothing: antialiased`)
-- Border radius base: `1rem` with computed variants (`sm` through `4xl`)
-- Custom shadows: `--shadow-soft`, `--shadow-card`, `--shadow-glow-critical`
-
-### Custom Utilities
-
-| Class | Purpose |
-|---|---|
-| `.live-dot` | Animated pulsing green dot (used for "Monitoring" and "Streaming" indicators) |
-| `.card-hover` | Subtle lift + shadow on hover for interactive cards |
-| `.critical-glow` | Red glow shadow for critical severity highlights |
-| `.scrollbar-thin` | Thin custom scrollbar for WebKit browsers |
-
----
+- **Landing:** rotating COBE Earth globe, feature accordion, illustrative phone previews, and workspace comparison.
+- **Motion:** GSAP/ScrollTrigger reveals and Lenis smooth scrolling on the desktop landing page. System reduced-motion preferences and Settings → Appearance controls are respected. The Earth has its own pause button and a texture fallback when WebGL is unavailable.
+- **Authentication:** responsive sign-in/sign-up layout with the existing Supabase email and OAuth flows. `WorkspaceGate` waits for the session before displaying protected routes.
+- **Status colors:** red, amber, and teal remain available for severity and status semantics alongside the blue theme.
 
 ## State Management & Data Flow
 
-### Current State (Mock Data)
+`src/lib/uiStore.ts` uses Zustand for sidebar and mobile navigation, alert/log filters, pause state, settings navigation, and motion preferences. Only sidebar collapse and appearance preferences persist in local storage; hydration runs on the client. Authentication stays in `AuthProvider`, and server data stays in React Query.
 
-The frontend currently operates with **client-side mock data** for demonstration purposes:
+Dashboard summaries and logs use the configured backend API. Some existing specialized-page metrics and settings are still illustrative; this UI update does not add connector provisioning or backend implementations for those controls. The marketing phone previews are explicitly labeled as sample content.
 
-- **`src/lib/mockData.ts`** provides all synthetic data:
-  - `generateAlerts(n)` — generates `n` alert rows with random severity, status, IP, user, country, etc.
-  - `generateTrend(points)` — generates time-series anomaly data for charts.
-  - `threatPatterns` — static array of top threat types with counts.
-  - `geoOrigins` — static array of 8 geographic threat origins with coordinates.
+### UI verification
 
-- **Live simulation** is achieved via `setInterval` in dashboard components:
-  - KPI metrics update every 4 seconds with random deltas.
-  - Live Logs page appends a new log line every 700ms.
+Use npm with the updated `package-lock.json`:
 
-### State Patterns
+```sh
+npm install --legacy-peer-deps
+npm run test:ui
+npm run build
+```
 
-| Pattern | Usage |
-|---|---|
-| `useState` | Local component state for UI controls (tabs, filters, toggles, selected items) |
-| `useMemo` | Expensive computations (alert generation, trend data) |
-| `useEffect` + `setInterval` | Simulated real-time data updates |
-| `useRef` | DOM refs for auto-scrolling the live log terminal |
-| Framer Motion | Entry animations (`initial` → `animate`) and SVG stroke animations |
-| Custom `useCountUp` hook | Animated number counting in `MetricCard` using `requestAnimationFrame` |
-| `useIsMobile` hook | Responsive breakpoint detection at 768px |
-
-### Backend Integration Points
-
-When connecting to a real backend, the following data sources would need API integration:
-
-| Data Source | Components Consuming |
-|---|---|
-| Log ingestion metrics | `MetricCard` (Total Logs, Anomalies, Critical, Threats, Blocked IPs) |
-| Anomaly time-series | `AnomalyTrend` |
-| Threat pattern aggregations | `ThreatPatterns` |
-| Geo-IP intelligence | `GeoThreatMap`, Geo page |
-| Alert events | `AlertsTable`, `AlertDrawer`, Alerts page |
-| User behavior baselines | UEBA page |
-| Live log stream (WebSocket) | Live Logs page |
-| Incident records | Incident Response page |
-| Integration statuses | Integrations page |
-| Workspace settings | Settings page |
+`tests/ui.spec.ts` exercises public pages, authentication states, all nine workspace routes, mobile navigation, saved preferences, filters, globe controls, and motion. It intercepts authentication and API requests with local fixtures and never requires a real account. Playwright uses installed Microsoft Edge on Windows; on other platforms install its Chromium browser with `npx playwright install chromium`. Screenshots and traces are written to ignored `test-results/`.
 
 ---
 

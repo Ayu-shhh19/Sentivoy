@@ -72,6 +72,9 @@ python scripts/generate_synthetic_logs.py
 | `SUPABASE_SERVICE_ROLE_KEY` | Yes | Database and Auth admin access |
 | `SUPABASE_JWT_SECRET` | Yes for local JWT checks | HS256 secret; Auth API is the fallback |
 | `FRONTEND_URL` | Yes for browser calls | Extra CORS origin. `localhost:5173` and `localhost:8080` are always allowed |
+| `RENDER_EXTERNAL_URL` | Set by Render | Public origin. When present, the process calls `GET /api/health` on it every 10 minutes so a free web service does not spin down |
+| `KEEP_ALIVE_URL` | No | Override that origin if you are not on Render |
+| `KEEP_ALIVE_ENABLED` | No | Set to `false` to stop the keep-alive pings |
 | `API_KEY` | Dev ingestion | Accepted by `POST /api/logs` and mapped to the first Auth user |
 | `APP_NAME`, `APP_ENV`, `DEBUG`, `HOST`, `PORT` | No | Process metadata. Uvicorn's `--host` and `--port` control the actual bind |
 | `ANOMALY_THRESHOLD` | No | Overrides the threshold in `calibration.json` |

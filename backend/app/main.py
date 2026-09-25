@@ -1,9 +1,10 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-import os
+import asyncio
 
 from app.core.config import get_settings
+from app.core.keep_alive import keep_alive_loop
 from app.core.rate_limiter import setup_rate_limiter
 from app.api import logs, anomalies, keys, dashboard, reports, notifications, live_logs
 from app.ml.models import load_models
@@ -45,7 +46,13 @@ async def startup_event():
     """Ensure ML model is loaded into memory on boot."""
     print("Loading ML models...")
     _ = load_models()
+    app.state.keep_alive_task = asyncio.create_task(keep_alive_loop())
 
 @app.get("/")
 def read_root():
     return {"message": f"Welcome to {settings.app_name} API"}
+
+@app.get("/api/health")
+def health():
+    """Cheap public check. Render keep-alive and uptime monitors should call this."""
+    return {"status": "ok"}
